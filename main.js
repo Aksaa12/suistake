@@ -3,7 +3,7 @@ import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
 import pkg from "tweetnacl"; // Default import
-const { randomBytes, sign } = pkg; // Destructure randomBytes and sign
+const { sign } = pkg; // Destructure sign
 
 // Konfigurasi
 const config = {
@@ -42,8 +42,14 @@ if (!decodedKey || !decodedKey.secretKey) {
 }
 
 // Dapatkan public key dari secretKey menggunakan tweetnacl
-// Menggunakan fromSeed untuk mendapatkan key pair
 const { publicKey } = sign.keyPair.fromSeed(decodedKey.secretKey); // Generate public key from secret key
+
+// Periksa apakah public key sesuai format yang benar
+if (publicKey.length !== 32) {
+  throw new Error("Panjang public key tidak valid.");
+}
+
+// Mengonversi publicKey ke format alamat Sui
 const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
 console.log("Address:", address); // Log alamat yang diperoleh dari public key
 
@@ -52,8 +58,12 @@ const client = new SuiClient({ network: config.RPC.NETWORK, privateKey: privateK
 
 // Fungsi untuk mendapatkan saldo WAL
 async function getWalBalance(address) {
-  const balance = await client.getBalance(address, config.WAL);
-  return balance;
+  try {
+    const balance = await client.getBalance(address, config.WAL);
+    return balance;
+  } catch (error) {
+    console.error("Error getting balance:", error.message);
+  }
 }
 
 // Fungsi untuk melakukan staking
