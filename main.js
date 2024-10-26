@@ -41,7 +41,8 @@ if (!decodedKey || !decodedKey.secretKey) {
 }
 
 // Dapatkan public key dari secretKey menggunakan tweetnacl
-const { publicKey } = nacl.sign.keyPair.fromSeed(decodedKey.secretKey); // Generate public key from secret key
+const keyPair = nacl.sign.keyPair.fromSeed(decodedKey.secretKey);
+const publicKey = keyPair.publicKey;
 
 // Mengonversi publicKey ke format alamat Sui
 const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
