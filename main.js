@@ -1,9 +1,10 @@
-import fs from "fs"; // Keep this
-import { SuiClient } from "@mysten/sui"; // Main import for the client
-import { Transaction } from "@mysten/sui/client"; // Adjusted import path for Transaction
-import { decodeSuiPrivateKey, Ed25519Keypair } from "@mysten/sui/cryptography";
-import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet";
+// Import yang diperlukan
+import fs from "fs";
+import { SuiClient } from "@mysten/sui"; // Updated import for SuiClient
+import { decodeSuiPrivateKey, Ed25519Keypair } from "@mysten/sui/cryptography"; // Keep this as is
+import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; // Keep this as is
 
+// Other imports...
 
 // Konfigurasi
 const config = {
