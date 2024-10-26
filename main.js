@@ -87,13 +87,17 @@ async function stakeWal() {
 
         console.log("Balance Retrieved:", balanceResponse);
 
-        // Check if the balance response indicates available coin objects
+        // Check for coin object count in the balance response
         if (balanceResponse.coinObjectCount > 0) {
+            console.log("Coin Object Count:", balanceResponse.coinObjectCount);
+            
             // Fetch coin objects directly
             const coinObjects = await client.getCoins({
                 owner: derivedAddress,
                 coinType: config.WAL
             });
+
+            console.log("Coin Objects Retrieved:", coinObjects);
 
             // Check if any coin objects were retrieved
             if (coinObjects && coinObjects.length > 0) {
@@ -131,7 +135,7 @@ async function stakeWal() {
                 console.log("Transaction Hash:", txBlock.digest);
                 console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
             } else {
-                console.error("No coin object found to stake.");
+                console.error("No coin objects found to stake.");
             }
         } else {
             console.error("No coin object found in balance response.");
