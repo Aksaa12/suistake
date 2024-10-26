@@ -1,10 +1,8 @@
-
-// Import yang diperlukan
-import fs from "fs";
-import { SuiClient, Transaction, getFullnodeUrl } from "@mysten/sui";
+import fs from "fs"; // Keep this
+import { SuiClient } from "@mysten/sui"; // Main import for the client
+import { Transaction } from "@mysten/sui/client"; // Adjusted import path for Transaction
 import { decodeSuiPrivateKey, Ed25519Keypair } from "@mysten/sui/cryptography";
-import { FaucetRateLimitError, getFaucetHost, requestSuiFromFaucetV0 } from "@mysten/sui/faucet";
-// Other imports...
+import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet";
 
 
 // Konfigurasi
