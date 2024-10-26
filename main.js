@@ -1,7 +1,11 @@
 
 // Import yang diperlukan
 import fs from "fs";
-import { SuiClient } from "@mysten/sui.js";
+import { SuiClient, Transaction, getFullnodeUrl } from "@mysten/sui";
+import { decodeSuiPrivateKey, Ed25519Keypair } from "@mysten/sui/cryptography";
+import { FaucetRateLimitError, getFaucetHost, requestSuiFromFaucetV0 } from "@mysten/sui/faucet";
+// Other imports...
+
 
 // Konfigurasi
 const config = {
