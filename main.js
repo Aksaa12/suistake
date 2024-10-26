@@ -57,10 +57,6 @@ const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.
 
 // Print available methods on the client
 console.log(Object.getOwnPropertyNames(Object.getPrototypeOf(client)));
-
-// Function to perform staking
-// Function to perform staking
-// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -78,27 +74,31 @@ async function stakeWal() {
         // Membangun transaksi staking
         const transaction = {
             kind: 'moveCall',
-            packageObjectId: config.WAL, // Sesuaikan dengan ID paket yang benar
+            packageObjectId: config.WAL_PACKAGE_ID, // Sesuaikan dengan ID paket yang benar
             module: 'wal', // Modul yang sesuai
             function: 'stake', // Nama fungsi untuk staking
             typeArguments: [],
             arguments: [
                 config.STAKE_AMOUNT.toString(), // Jumlah yang akan dipertaruhkan
-                config.STAKENODEOPERATOR,
-                config.WALRUS_POOL_OBJECT_ID,
+                config.STAKENODEOPERATOR, // Node operator
+                config.WALRUS_POOL_OBJECT_ID, // ID pool
             ],
             gasBudget: 10000, // Sesuaikan anggaran gas jika perlu
         };
 
         // Mengirim transaksi
-        const tx = await client.signAndExecuteTransaction(transaction, {
-            privateKey: decodedPrivateKey.secretKey,
+        const txBlock = await client.executeTransactionBlock({
+            transaction,
+            options: {
+                sender: derivedAddress,
+                gasBudget: 10000,
+            },
         });
 
-        const txStatus = await client.waitForTransaction(tx.digest);
+        const txStatus = await client.waitForTransaction(txBlock.digest);
         console.log("Transaction Status:", txStatus ? "Success" : "Failed");
-        console.log("Transaction Hash:", tx.digest);
-        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.digest}`);
+        console.log("Transaction Hash:", txBlock.digest);
+        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
     } catch (error) {
         console.error("Error during staking:", error.message);
         if (error.response) {
