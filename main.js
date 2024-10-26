@@ -138,3 +138,4 @@ async function stakeWal() {
 
 // Eksekusi pertaruhan
 stakeWal();
+
