@@ -71,6 +71,7 @@ async function stakeWal() {
         const walBalance = await getWalBalance(derivedAddress);
         console.log("WAL Balance:", walBalance);
 
+        // Check if the balance is sufficient for staking
         if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
             console.log("Insufficient WAL balance for staking.");
             return;
@@ -86,15 +87,15 @@ async function stakeWal() {
 
         console.log("Balance Retrieved:", balanceResponse);
 
-        // Check if the balance response contains coin objects
+        // Check if the balance response indicates available coin objects
         if (balanceResponse.coinObjectCount > 0) {
-            // Instead of relying on balance response, fetch coin objects directly
+            // Fetch coin objects directly
             const coinObjects = await client.getCoins({
                 owner: derivedAddress,
                 coinType: config.WAL
             });
 
-            // Check if coin objects were retrieved
+            // Check if any coin objects were retrieved
             if (coinObjects && coinObjects.length > 0) {
                 const coinObjectId = coinObjects[0].id; // Adjust based on actual structure
                 console.log("Coin Object ID:", coinObjectId);
@@ -102,7 +103,7 @@ async function stakeWal() {
                 // Build the transaction
                 const transaction = {
                     kind: 'moveCall',
-                    packageObjectId: config.WALRUS_POOL_OBJECT_ID,
+                    packageObjectId: walrusPoolObjectId, // Use the provided walrusPoolObjectId
                     module: 'wal',
                     function: 'stake',
                     typeArguments: [],
