@@ -1,8 +1,7 @@
-// Import yang diperlukan
 import fs from "fs";
-import { SuiClient } from "@mysten/sui"; // Updated import for SuiClient
-import { decodeSuiPrivateKey, Ed25519Keypair } from "@mysten/sui/cryptography"; // Keep this as is
-import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; // Keep this as is
+import { SuiClient } from "./node_modules/@mysten/sui/dist/client.js"; // Direct import
+import { decodeSuiPrivateKey, Ed25519Keypair } from "./node_modules/@mysten/sui/cryptography.js"; // Direct import
+import { requestSuiFromFaucetV0 } from "./node_modules/@mysten/sui/faucet.js"; // Direct import
 
 // Other imports...
 
