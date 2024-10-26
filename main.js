@@ -51,78 +51,65 @@ async function getWalBalance(address) {
         return null;
     }
 }
-// Function to get the list of coin objects
-async function getCoinObjects(address) {
-    try {
-        const coinObjects = await client.getCoinObjects({
-            owner: address,
-            coinType: config.WAL
-        });
-        return coinObjects;
-    } catch (error) {
-        console.error("Error fetching coin objects:", error.message);
-        return [];
-    }
-}
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
 
-        // Fetch the WAL balance
+        // Ambil saldo WAL
         const walBalance = await getWalBalance(derivedAddress);
         console.log("WAL Balance:", walBalance);
 
-        // Check if the balance is sufficient for staking
+        // Periksa apakah saldo cukup untuk dipertaruhkan
         if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
-            console.log("Insufficient WAL balance for staking.");
+            console.log("Saldo WAL tidak cukup untuk dipertaruhkan.");
             return;
         }
 
-        console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
+        console.log(`Mempertaruhkan ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
 
-        // Fetch the balance
+        // Ambil saldo
         const balanceResponse = await client.getBalance({
             owner: derivedAddress,
             coinType: config.WAL
         });
 
-        console.log("Balance Retrieved:", JSON.stringify(balanceResponse, null, 2));
+        console.log("Saldo Diperoleh:", JSON.stringify(balanceResponse, null, 2));
 
-        // Check for coin object count in the balance response
+        // Periksa jumlah objek koin dalam respons saldo
         if (balanceResponse.coinObjectCount > 0) {
-            console.log("Coin Object Count:", balanceResponse.coinObjectCount);
+            console.log("Jumlah Objek Koin:", balanceResponse.coinObjectCount);
             
-            // Fetch coin objects directly
+            // Ambil objek koin secara langsung
             const coinObjects = await client.getCoins({
                 owner: derivedAddress,
                 coinType: config.WAL
             });
 
-            console.log("Coin Objects Retrieved:", JSON.stringify(coinObjects, null, 2));
+            console.log("Objek Koin Diperoleh:", JSON.stringify(coinObjects, null, 2));
 
-            // Check if any coin objects were retrieved
+            // Periksa apakah ada objek koin yang diperoleh
             if (coinObjects && coinObjects.length > 0) {
-                const coinObjectId = coinObjects[0].id; // Adjust based on actual structure
-                console.log("Coin Object ID:", coinObjectId);
+                const coinObjectId = coinObjects[0].id; // Sesuaikan berdasarkan struktur aktual
+                console.log("ID Objek Koin:", coinObjectId);
 
-                // Build the transaction
+                // Bangun transaksi
                 const transaction = {
                     kind: 'moveCall',
-                    packageObjectId: walrusPoolObjectId, // Use the provided walrusPoolObjectId
+                    packageObjectId: walrusPoolObjectId, // Gunakan walrusPoolObjectId yang diberikan
                     module: 'wal',
                     function: 'stake',
                     typeArguments: [],
                     arguments: [
-                        coinObjectId, // Pass the coin object ID
+                        coinObjectId, // Kirim ID objek koin
                         config.STAKENODEOPERATOR, // Node operator
                     ],
                     gasBudget: 10000,
                 };
 
-                // Log the transaction object for debugging
-                console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
+                // Log objek transaksi untuk debugging
+                console.log("Transaksi yang akan dikirim:", JSON.stringify(transaction, null, 2));
 
-                // Execute the transaction
+                // Eksekusi transaksi
                 const txBlock = await client.executeTransactionBlock({
                     transaction,
                     options: {
@@ -132,22 +119,22 @@ async function stakeWal() {
                 });
 
                 const txStatus = await client.waitForTransaction(txBlock.digest);
-                console.log("Transaction Status:", txStatus ? "Success" : "Failed");
-                console.log("Transaction Hash:", txBlock.digest);
-                console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
+                console.log("Status Transaksi:", txStatus ? "Sukses" : "Gagal");
+                console.log("Hash Transaksi:", txBlock.digest);
+                console.log(`Penjelajah: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
             } else {
-                console.error("No coin objects found to stake.");
+                console.error("Tidak ada objek koin yang ditemukan untuk dipertaruhkan.");
             }
         } else {
-            console.error("No coin object found in balance response.");
+            console.error("Tidak ada objek koin yang ditemukan dalam respons saldo.");
         }
     } catch (error) {
-        console.error("Error during staking:", error.message);
+        console.error("Kesalahan saat mempertaruhkan:", error.message);
         if (error.response) {
-            console.error("Staking Error Response Data:", error.response.data);
+            console.error("Data Respons Kesalahan Pertaruhan:", error.response.data);
         }
     }
 }
 
-// Execute staking
+// Eksekusi pertaruhan
 stakeWal();
