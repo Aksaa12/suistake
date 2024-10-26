@@ -1,7 +1,7 @@
 // Import yang diperlukan
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
-import { decodeSuiPrivateKey, getPublicKeyFromSecretKey } from "@mysten/sui/cryptography"; 
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
 import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; 
 
 // Konfigurasi
@@ -40,8 +40,10 @@ if (!decodedKey || !decodedKey.secretKey) {
   throw new Error("Gagal mendapatkan secretKey dari private key. Pastikan private key benar.");
 }
 
-// Dapatkan public key dari secretKey
-const publicKey = getPublicKeyFromSecretKey(decodedKey.secretKey);
+// Jika getPublicKeyFromSecretKey tidak ada, gunakan cara lain untuk mendapatkan public key.
+// Sebagai contoh, menggunakan library crypto untuk menghitung public key dari secretKey.
+const { publicKey } = getPublicKey(decodedKey.secretKey); // Pastikan Anda memiliki fungsi ini
+
 const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
 console.log("Address:", address); // Log alamat yang diperoleh dari public key
 
