@@ -1,7 +1,7 @@
 // Import necessary modules
-import fs from 'fs';
-import { JsonRpcProvider, Ed25519Keypair, RawSigner } from '@mysten/sui.js';
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { JsonRpcProvider, RawSigner } from '@mysten/sui.js/providers/json-rpc-provider';
+import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
+import { decodeSuiPrivateKey } from "@mysten/sui.js/cryptography";
 
 // Load private keys from file
 function loadPrivateKeys() {
