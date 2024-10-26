@@ -52,7 +52,7 @@ async function getWalBalance(address) {
     }
 }
 
-// Function to perform staking using signAndExecuteTransactionBlock
+// Function to perform staking using moveCall
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -66,12 +66,12 @@ async function stakeWal() {
         }
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
-        
-        // Construct transaction data
-        const txBlock = {
-            packageObjectId: config.WAL, 
-            module: 'staking', // Pastikan ini adalah modul untuk staking di jaringan Anda
-            function: 'stake', // Pastikan ini adalah fungsi staking yang benar
+
+        // Prepare the transaction parameters
+        const transaction = {
+            packageObjectId: config.WAL,
+            module: 'staking', // Check if module and function names are correct
+            function: 'stake',
             typeArguments: [],
             arguments: [
                 config.WALRUS_POOL_OBJECT_ID,
@@ -81,21 +81,16 @@ async function stakeWal() {
             gasBudget: 2000,
         };
 
-        const signedTransaction = await client.signAndExecuteTransactionBlock({
-            transactionBlock: txBlock,
+        const result = await client.moveCall({
             signer: wallet,
+            ...transaction,
         });
 
-        // Checking transaction status
-        const txStatus = await client.getTransactionStatus(signedTransaction.digest);
-        console.log("Transaction Status:", txStatus.success ? "Success" : "Failed");
-        console.log("Transaction Hash:", signedTransaction.digest);
-        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${signedTransaction.digest}`);
+        console.log("Transaction Status:", result.success ? "Success" : "Failed");
+        console.log("Transaction Hash:", result.digest);
+        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${result.digest}`);
     } catch (error) {
         console.error("Error during staking:", error.message);
-        if (error.response) {
-            console.error("Staking Error Response Data:", error.response.data);
-        }
     }
 }
 
