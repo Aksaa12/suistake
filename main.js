@@ -1,6 +1,7 @@
 // Dependencies
-import { SuiClient } from "@mysten/sui.js";
-import fs from "fs";
+require = require("esm")(module);
+const { SuiClient } = require("@mysten/sui.js");
+const fs = require("fs");
 
 
 // Konfigurasi
