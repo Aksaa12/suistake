@@ -20,18 +20,23 @@ if (privateKeys.length === 0) {
 
 // Periksa validitas kunci privat
 // Periksa validitas kunci privat
+// Periksa validitas kunci privat
 privateKeys.forEach((key, index) => {
     console.log(`Key ${index + 1}:`, key);
     // Periksa apakah kunci privat dimulai dengan 'suiprivkey'
     if (!key.startsWith('suiprivkey')) {
         throw new Error(`Kunci privat tidak valid pada baris ${index + 1}. Kunci harus diawali dengan 'suiprivkey'.`);
     }
+    // Potong kunci jika panjangnya lebih dari 66 karakter
+    if (key.length > 66) {
+        console.warn(`Kunci privat pada baris ${index + 1} lebih dari 66 karakter. Memotong menjadi 66 karakter.`);
+        key = key.slice(0, 66);
+    }
     // Periksa panjang kunci privat
     if (key.length !== 66) {
         throw new Error(`Kunci privat tidak valid pada baris ${index + 1}. Kunci harus memiliki panjang 66 karakter.`);
     }
 });
-
 // Decode private key pertama untuk mendapatkan secretKey
 const decodedKey = decodeSuiPrivateKey(privateKeys[0]); // Gunakan kunci pertama
 console.log("Decoded Key:", decodedKey); // Log hasil decode untuk verifikasi
