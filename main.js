@@ -75,7 +75,8 @@ async function stakeWal() {
 
         console.log("Coin Objects Response:", JSON.stringify(coinObjectsResponse, null, 2));
 
-        if (coinObjectsResponse.data && coinObjectsResponse.data.length > 0) {
+        // Check if coinObjectsResponse.data is defined and has length
+        if (coinObjectsResponse && coinObjectsResponse.data && coinObjectsResponse.data.length > 0) {
             const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
             console.log("Coin Object ID:", coinObjectId);
 
@@ -84,7 +85,7 @@ async function stakeWal() {
                 kind: 'moveCall',
                 packageObjectId: config.WALRUS_POOL_OBJECT_ID,
                 module: 'wal',
-                function: 'stake',
+                function: 'stake ',
                 typeArguments: [],
                 arguments: [
                     coinObjectId,
