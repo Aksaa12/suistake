@@ -75,11 +75,14 @@ async function stakeWal() {
             function: 'stake',
             typeArguments: [],
             arguments: [
-                config.STAKE_AMOUNT.toString(),
-                config.STAKENODEOPERATOR,
+                config.STAKE_AMOUNT.toString(),  // Amount to stake
+                config.STAKENODEOPERATOR,         // Node operator
             ],
             gasBudget: 10000, // Adjust gas budget as necessary
         };
+
+        // Log the transaction object for debugging
+        console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
 
         // Execute the transaction
         const txBlock = await client.executeTransactionBlock({
@@ -91,7 +94,7 @@ async function stakeWal() {
         });
 
         const txStatus = await client.waitForTransaction(txBlock.digest);
-        console.log("Transaction Status:", txStatus ? "Success" : "Failed");
+        console.log("Transaction Status:", txStatus ? "Success" : "Failed ");
         console.log("Transaction Hash:", txBlock.digest);
         console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
     } catch (error) {
