@@ -33,19 +33,23 @@ const config = {
     STAKE_AMOUNT: 1,
 };
 
-// Create Sui client
+// Set up the SuiClient
 const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
 
 // Function to get WAL balance with enhanced error logging
 async function getWalBalance(address) {
     try {
         console.log(`Fetching WAL balance for address: ${address}`);
-        const balance = await client.getBalance(address, config.WAL);
-        return balance;
+        const balance = await client.getBalance({
+            owner: address,
+            coinType: config.WAL
+        });
+        console.log("Balance Retrieved:", balance);
+        return balance.totalBalance;
     } catch (error) {
         console.error("Error getting balance:", error.message);
         if (error.response) {
-            console.error("Error Response:", error.response.data);
+            console.error("Error Response Data:", error.response.data);
         }
         return null;
     }
@@ -69,7 +73,7 @@ async function stakeWal() {
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-            privateKey: decodedPrivateKey.secretKey, // Pass the decoded private key for signing
+            privateKey: decodedPrivateKey.secretKey,
         });
 
         const txStatus = await client.getTransactionStatus(tx.hash);
@@ -79,7 +83,7 @@ async function stakeWal() {
     } catch (error) {
         console.error("Error during staking:", error.message);
         if (error.response) {
-            console.error("Staking Error Response:", error.response.data);
+            console.error("Staking Error Response Data:", error.response.data);
         }
     }
 }
