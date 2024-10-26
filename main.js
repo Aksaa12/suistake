@@ -1,8 +1,7 @@
-// Import required modules
+// Import necessary modules
 import fs from 'fs';
-import { SuiClient } from '@mysten/sui/client';
+import { JsonRpcProvider, Ed25519Keypair, RawSigner } from '@mysten/sui.js';
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 // Load private keys from file
 function loadPrivateKeys() {
@@ -10,7 +9,6 @@ function loadPrivateKeys() {
     return data.split('\n').filter(line => line.trim() !== '');
 }
 
-// Load and decode private key
 const privateKeys = loadPrivateKeys();
 const privateKey = privateKeys[0];
 const decodedPrivateKey = decodeSuiPrivateKey(privateKey);
@@ -27,13 +25,14 @@ const config = {
     STAKE_AMOUNT: 1,
 };
 
-// Initialize SuiClient
-const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
+// Set up JsonRpcProvider and RawSigner
+const provider = new JsonRpcProvider(`https://fullnode.${config.RPC.NETWORK}.sui.io`);
+const signer = new RawSigner(wallet, provider);
 
 async function getWalBalance(address) {
     try {
         console.log(`Fetching WAL balance for address: ${address}`);
-        const balance = await client.getBalance({
+        const balance = await provider.getBalance({
             owner: address,
             coinType: config.WAL
         });
@@ -56,7 +55,7 @@ async function stakeWal() {
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
 
-        const transactionBlock = {
+        const transaction = {
             packageObjectId: config.WAL,
             module: 'staking',
             function: 'stake',
@@ -69,9 +68,8 @@ async function stakeWal() {
             gasBudget: 2000,
         };
 
-        const result = await client.signAndExecuteTransactionBlock({
-            signer: wallet,
-            transactionBlock,
+        const result = await signer.signAndExecuteTransactionBlock({
+            transactionBlock: transaction,
         });
 
         console.log("Transaction Status:", result.success ? "Success" : "Failed");
