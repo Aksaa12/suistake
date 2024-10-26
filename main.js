@@ -42,12 +42,19 @@ if (!decodedKey || !decodedKey.secretKey) {
 // Derive public key from secretKey
 const keyPair = nacl.sign.keyPair.fromSeed(decodedKey.secretKey);
 const publicKey = keyPair.publicKey;
-const address = `0x${Buffer.from(publicKey).toString('hex')}`;
-console.log("Address:", address);
 
+// Verify address format and derivation
+function deriveSuiAddress(publicKey) {
+    return `0x${Buffer.from(publicKey).toString('hex')}`;
+}
+
+const derivedAddress = deriveSuiAddress(publicKey);
+console.log("Derived Address:", derivedAddress);
+
+// Expected address to match
 const expectedAddress = '0xc95a0494528da9c7052d6e831eeb2564df253b6950c27ea5f2d679990abbc75e';
 console.log("Expected Address:", expectedAddress);
-console.log("Addresses Match:", address === expectedAddress);
+console.log("Addresses Match:", derivedAddress === expectedAddress);
 
 // Configuration
 const config = {
@@ -78,9 +85,9 @@ async function getWalBalance(address) {
 // Function to perform staking
 async function stakeWal() {
     try {
-        console.log("Address:", address);
+        console.log("Derived Address:", derivedAddress);
 
-        const walBalance = await getWalBalance(address);
+        const walBalance = await getWalBalance(derivedAddress);
         console.log("WAL Balance:", walBalance);
 
         if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
