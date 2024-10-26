@@ -1,7 +1,7 @@
 // Import yang diperlukan
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
-import { decodeSuiPrivateKey, getAddressFromSecretKey } from "@mysten/sui/cryptography"; 
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
 import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; 
 
 // Konfigurasi
@@ -40,8 +40,8 @@ if (!decodedKey || !decodedKey.secretKey) {
   throw new Error("Gagal mendapatkan secretKey dari private key. Pastikan private key benar.");
 }
 
-// Dapatkan address dari secretKey
-const address = getAddressFromSecretKey(decodedKey.secretKey);
+// Dapatkan address dari secretKey secara manual
+const address = `0x${Buffer.from(decodedKey.secretKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
 console.log("Address:", address); // Log alamat yang diperoleh dari secretKey
 
 // Buat client SUI
