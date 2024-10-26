@@ -3,6 +3,9 @@ import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
 import { randomBytes, generateKeyPair } from "tweetnacl"; // Import tweetnacl
+import pkg from "tweetnacl";
+const { randomBytes, sign } = pkg; // Get randomBytes and sign methods from the default import
+
 
 // Konfigurasi
 const config = {
