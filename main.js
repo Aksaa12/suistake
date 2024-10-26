@@ -86,8 +86,8 @@ async function stakeWal() {
                 const coinObjectId = coinObjects.data[0].coinObjectId; // Pastikan menggunakan coinObjectId
                 console.log("ID Objek Koin:", coinObjectId);
 
-                // Definisikan walrusPoolObjectId di sini
-                const walrusPoolObjectId = "ID_OBJECT_POOL_YANG_BENAR"; // Ganti dengan ID pool yang sesuai
+                // Gunakan walrusPoolObjectId yang telah Anda berikan
+                const walrusPoolObjectId = "0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f31379f1b7c04244061d43914";
 
                 const transaction = {
                     kind: 'moveCall',
