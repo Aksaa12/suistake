@@ -2,8 +2,7 @@
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
-import pkg from "tweetnacl"; // Default import
-const { sign } = pkg; // Destructure sign
+import { publicKey } from "@mysten/sui/cryptography"; // Import untuk menghasilkan public key
 
 // Konfigurasi
 const config = {
@@ -41,11 +40,11 @@ if (!decodedKey || !decodedKey.secretKey) {
   throw new Error("Gagal mendapatkan secretKey dari private key. Pastikan private key benar.");
 }
 
-// Dapatkan public key dari secretKey menggunakan tweetnacl
-const { publicKey } = sign.keyPair.fromSeed(decodedKey.secretKey); // Generate public key from secret key
+// Mengonversi secretKey ke publicKey
+const { publicKey: publicKeyBytes } = publicKey(decodedKey.secretKey); // Generate public key from secret key
 
 // Mengonversi publicKey ke format alamat Sui
-const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
+const address = `0x${Buffer.from(publicKeyBytes).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
 
 // Memastikan panjang dan format alamat
 console.log("Address:", address); // Log alamat yang diperoleh dari public key
