@@ -1,7 +1,7 @@
 // Import yang diperlukan
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
+import { decodeSuiPrivateKey, getPublicKeyFromSecretKey } from "@mysten/sui/cryptography"; 
 import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; 
 
 // Konfigurasi
@@ -40,9 +40,10 @@ if (!decodedKey || !decodedKey.secretKey) {
   throw new Error("Gagal mendapatkan secretKey dari private key. Pastikan private key benar.");
 }
 
-// Dapatkan address dari secretKey secara manual
-const address = `0x${Buffer.from(decodedKey.secretKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
-console.log("Address:", address); // Log alamat yang diperoleh dari secretKey
+// Dapatkan public key dari secretKey
+const publicKey = getPublicKeyFromSecretKey(decodedKey.secretKey);
+const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
+console.log("Address:", address); // Log alamat yang diperoleh dari public key
 
 // Buat client SUI
 const client = new SuiClient({ network: config.RPC.NETWORK, privateKey: privateKeys[0] }); // Menggunakan kunci privat pertama
@@ -56,7 +57,7 @@ async function getWalBalance(address) {
 // Fungsi untuk melakukan staking
 async function stakeWal() {
   try {
-    // Tampilkan alamat yang diperoleh dari private key
+    // Tampilkan alamat yang diperoleh dari public key
     console.log("Address:", address);
 
     // Dapatkan saldo WAL
