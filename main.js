@@ -7,36 +7,29 @@ import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 // Load private keys from file
 function loadPrivateKeys() {
     const data = fs.readFileSync('data.txt', 'utf-8');
-    return data.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
+    return data.split('\n').filter(line => line.trim() !== '');
 }
 
 // Load and decode private key
 const privateKeys = loadPrivateKeys();
-const privateKey = privateKeys[0]; // Use the first private key
-
-// Decode private key and derive address
+const privateKey = privateKeys[0];
 const decodedPrivateKey = decodeSuiPrivateKey(privateKey);
 const wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
 const derivedAddress = wallet.getPublicKey().toSuiAddress();
-
 console.log("Derived Address:", derivedAddress);
 
 // Configuration
 const config = {
     STAKENODEOPERATOR: "0xcf4b9402e7f156bc75082bc07581b0829f081ccfc8c444c71df4536ea33d094a",
     WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL",
-    RPC: {
-        NETWORK: "testnet",
-        EXPLORER: "https://testnet.suivision.xyz/",
-    },
+    RPC: { NETWORK: "testnet", EXPLORER: "https://testnet.suivision.xyz/" },
     WALRUS_POOL_OBJECT_ID: "0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f31379f1b7c04244061d43914",
     STAKE_AMOUNT: 1,
 };
 
-// Set up the SuiClient
+// Initialize SuiClient
 const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
 
-// Function to get WAL balance
 async function getWalBalance(address) {
     try {
         console.log(`Fetching WAL balance for address: ${address}`);
@@ -45,21 +38,17 @@ async function getWalBalance(address) {
             coinType: config.WAL
         });
         console.log("Balance Retrieved:", balance);
-        return parseInt(balance.totalBalance, 10); // Convert to number for comparison
+        return parseInt(balance.totalBalance, 10);
     } catch (error) {
         console.error("Error getting balance:", error.message);
         return null;
     }
 }
 
-// Function to perform staking using moveCall
 async function stakeWal() {
     try {
-        console.log("Derived Address:", derivedAddress);
-
         const walBalance = await getWalBalance(derivedAddress);
         console.log("WAL Balance:", walBalance);
-
         if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
             console.log("Insufficient WAL balance for staking.");
             return;
@@ -67,10 +56,9 @@ async function stakeWal() {
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
 
-        // Prepare the transaction parameters
-        const transaction = {
+        const transactionBlock = {
             packageObjectId: config.WAL,
-            module: 'staking', // Check if module and function names are correct
+            module: 'staking',
             function: 'stake',
             typeArguments: [],
             arguments: [
@@ -81,9 +69,9 @@ async function stakeWal() {
             gasBudget: 2000,
         };
 
-        const result = await client.moveCall({
+        const result = await client.signAndExecuteTransactionBlock({
             signer: wallet,
-            ...transaction,
+            transactionBlock,
         });
 
         console.log("Transaction Status:", result.success ? "Success" : "Failed");
