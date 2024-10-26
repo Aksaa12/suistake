@@ -18,9 +18,17 @@ const config = {
 
 // Muat private key dari file
 const privateKey = fs.readFileSync("data.txt", "utf8").trim();
+console.log("Private Key:", privateKey); // Log private key untuk memastikan benar
 
 // Decode private key untuk mendapatkan alamat
-const { address } = decodeSuiPrivateKey(privateKey);
+const decodedKey = decodeSuiPrivateKey(privateKey);
+console.log("Decoded Key:", decodedKey); // Log hasil decode untuk verifikasi
+
+// Pastikan kita mendapatkan address dari hasil decode
+if (!decodedKey || !decodedKey.address) {
+  throw new Error("Gagal mendapatkan alamat dari private key. Pastikan private key benar.");
+}
+const address = decodedKey.address; // Ambil address dari hasil decode
 
 // Buat client SUI
 const client = new SuiClient({ network: config.RPC.NETWORK, privateKey });
