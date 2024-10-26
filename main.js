@@ -108,4 +108,4 @@ async function stakeWal() {
         }
     }
 }
-stakewal()
+stakeWal();
