@@ -3,10 +3,11 @@ import fs from 'fs';
 import { SuiClient } from '@mysten/sui/client';
 import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
 import nacl from 'tweetnacl';
+
 // Fungsi untuk membaca kunci privat dari file
 function loadPrivateKeys() {
-  const data = fs.readFileSync('data.txt', 'utf-8');
-  return data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
+    const data = fs.readFileSync('data.txt', 'utf-8');
+    return data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
 }
 
 // Memuat kunci privat dari file
@@ -49,7 +50,7 @@ console.log("Addresses Match:", address === expectedAddress);
 
 // Konfigurasi
 const config = {
-    STAKENODEOPERATOR: "0xcf4b9402e7f156bc75082bc07581b0829f081cc8c444c71df4536ea33d094a",
+    STAKENODEOPERATOR: "0xcf4b9402e7f156bc75082bc07581b0829f081ccfc8c444c71df4536ea33d094a",
     WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL",
     RPC: {
         NETWORK: "testnet",
@@ -102,4 +103,11 @@ async function stakeWal() {
         const txStatus = await client.getTransactionStatus(tx.hash);
         console.log("Status Transaksi:", txStatus.success ? "Berhasil" : "Gagal");
         console.log("Hash Transaksi:", tx.hash);
-        console.lo
+        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.hash}`);
+    } catch (error) {
+        console.error("Terjadi kesalahan saat staking:", error.message);
+    }
+}
+
+// Eksekusi staking
+stakeWal();
