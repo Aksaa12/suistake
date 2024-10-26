@@ -4,11 +4,23 @@ import { SuiClient } from '@mysten/sui/client';
 import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
 import nacl from 'tweetnacl'; // Menggunakan tweetnacl untuk mengelola kunci
 
-// Kunci privat yang diharapkan
-const privateKeyString = 'suiprivkey1qql5mpg03ns03tsn7lax22tt3nupfewtl459vsxakhzkhx72c48qcuk3svp';
+// Fungsi untuk memuat private keys dari file
+function loadPrivateKeys() {
+    const data = fs.readFileSync('data.txt', 'utf-8');
+    return data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
+}
 
-// Decode private key untuk mendapatkan secretKey
-const decodedKey = decodeSuiPrivateKey(privateKeyString); // Decode the private key
+// Memuat kunci privat dari file
+const privateKeys = loadPrivateKeys();
+console.log("Private Keys:", privateKeys); // Log private keys untuk verifikasi
+
+// Pastikan ada kunci privat yang dimuat
+if (privateKeys.length === 0) {
+    throw new Error("Tidak ada kunci privat yang ditemukan di data.txt.");
+}
+
+// Decode private key pertama untuk mendapatkan secretKey
+const decodedKey = decodeSuiPrivateKey(privateKeys[0]); // Gunakan kunci pertama
 console.log("Decoded Key:", decodedKey); // Log hasil decode untuk verifikasi
 
 // Dapatkan public key dari secretKey menggunakan tweetnacl
@@ -74,7 +86,7 @@ async function stakeWal() {
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-            privateKey: privateKeyString, // Tambahkan kunci privat di sini
+            privateKey: privateKeys[0], // Tambahkan kunci privat di sini
         });
 
         // Tampilkan status transaksi
