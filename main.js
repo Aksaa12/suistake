@@ -1,8 +1,12 @@
 // Import yang diperlukan
+// Import yang diperlukan
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; // Updated import for SuiClient
-import { decodeSuiPrivateKey, Ed25519Keypair } from "@mysten/sui/cryptography"; // Keep this as is
-import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; // Keep this as is
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; // Keep this as is
+// Check if there are other available imports
+// Example: const { AnotherExport } = await import('@mysten/sui/cryptography');
+import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; //
+
 
 // Konfigurasi
 const config = {
