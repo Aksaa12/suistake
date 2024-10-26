@@ -45,7 +45,7 @@ async function getWalBalance(address) {
             coinType: config.WAL
         });
         console.log("Balance Retrieved:", balance);
-        return balance.totalBalance;
+        return parseInt(balance.totalBalance, 10); // Convert to number for comparison
     } catch (error) {
         console.error("Error getting balance:", error.message);
         if (error.response) {
@@ -69,17 +69,24 @@ async function stakeWal() {
         }
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
-        const tx = await client.stake({
-            amount: config.STAKE_AMOUNT,
-            stakeNodeOperator: config.STAKENODEOPERATOR,
-            poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-            privateKey: decodedPrivateKey.secretKey,
+        const tx = await client.moveCall({
+            packageObjectId: config.WAL, // Change to your staking package if different
+            module: 'staking', // Update to actual module for staking
+            function: 'stake', // Update to actual function for staking
+            typeArguments: [],
+            arguments: [
+                config.WALRUS_POOL_OBJECT_ID,
+                config.STAKENODEOPERATOR,
+                config.STAKE_AMOUNT,
+            ],
+            gasBudget: 2000,
+            signer: wallet,
         });
 
-        const txStatus = await client.getTransactionStatus(tx.hash);
+        const txStatus = await client.getTransactionStatus(tx.digest);
         console.log("Transaction Status:", txStatus.success ? "Success" : "Failed");
-        console.log("Transaction Hash:", tx.hash);
-        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.hash}`);
+        console.log("Transaction Hash:", tx.digest);
+        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.digest}`);
     } catch (error) {
         console.error("Error during staking:", error.message);
         if (error.response) {
