@@ -6,8 +6,15 @@ import nacl from 'tweetnacl';
 
 // Fungsi untuk memuat private keys dari file
 function loadPrivateKeys() {
-    const data = fs.readFileSync('data.txt', 'utf-8');
-    return data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
+    try {
+        const data = fs.readFileSync('data.txt', 'utf-8');
+        const keys = data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
+        console.log("Loaded Private Keys:", keys); // Log kunci privat yang dimuat
+        return keys;
+    } catch (error) {
+        console.error("Error reading private keys from file:", error.message);
+        throw error; // Lempar error untuk ditangani di tempat lain
+    }
 }
 
 // Memuat kunci privat dari file
@@ -18,6 +25,14 @@ console.log("Private Keys:", privateKeys); // Log private keys untuk verifikasi
 if (privateKeys.length === 0) {
     throw new Error("Tidak ada kunci privat yang ditemukan di data.txt.");
 }
+
+// Periksa panjang dan format kunci privat
+privateKeys.forEach((key, index) => {
+    console.log(`Key ${index + 1}:`, key);
+    if (!key.startsWith('suiprivkey') || key.length !== 66) {
+        throw new Error(`Kunci privat tidak valid pada baris ${index + 1}.`);
+    }
+});
 
 // Decode private key pertama untuk mendapatkan secretKey
 const decodedKey = decodeSuiPrivateKey(privateKeys[0]); // Gunakan kunci pertama
