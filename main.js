@@ -51,7 +51,6 @@ async function getWalBalance(address) {
         return null;
     }
 }
-
 // Function to perform staking
 async function stakeWal() {
     try {
@@ -67,11 +66,18 @@ async function stakeWal() {
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
 
-        // Fetch the coin object ID that you want to stake
-        const coinObjectId = await client.getCoinObjectId({
+        // Assuming you have the coin object from the balance response
+        const balance = await client.getBalance({
             owner: derivedAddress,
             coinType: config.WAL
         });
+
+        const coinObjectId = balance.coinObjectCount > 0 ? balance.coinObjectId : null; // Adjust this line as needed
+
+        if (!coinObjectId) {
+            console.error("No coin object found to stake.");
+            return;
+        }
 
         // Build the transaction
         const transaction = {
@@ -81,7 +87,7 @@ async function stakeWal() {
             function: 'stake',
             typeArguments: [],
             arguments: [
-                coinObjectId, // Pass the coin object ID instead of just the amount
+                coinObjectId, // Pass the coin object ID
                 config.STAKENODEOPERATOR, // Node operator
             ],
             gasBudget: 10000,
@@ -110,6 +116,5 @@ async function stakeWal() {
         }
     }
 }
-
 // Execute staking
 stakeWal();
