@@ -55,11 +55,9 @@ async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
 
-        // Ambil saldo WAL
         const walBalance = await getWalBalance(derivedAddress);
         console.log("WAL Balance:", walBalance);
 
-        // Periksa apakah saldo cukup untuk dipertaruhkan
         if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
             console.log("Saldo WAL tidak cukup untuk dipertaruhkan.");
             return;
@@ -67,7 +65,6 @@ async function stakeWal() {
 
         console.log(`Mempertaruhkan ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
 
-        // Ambil saldo
         const balanceResponse = await client.getBalance({
             owner: derivedAddress,
             coinType: config.WAL
@@ -75,11 +72,9 @@ async function stakeWal() {
 
         console.log("Saldo Diperoleh:", JSON.stringify(balanceResponse, null, 2));
 
-        // Periksa jumlah objek koin dalam respons saldo
         if (balanceResponse.coinObjectCount > 0) {
             console.log("Jumlah Objek Koin:", balanceResponse.coinObjectCount);
             
-            // Ambil objek koin secara langsung
             const coinObjects = await client.getCoins({
                 owner: derivedAddress,
                 coinType: config.WAL
@@ -87,29 +82,25 @@ async function stakeWal() {
 
             console.log("Objek Koin Diperoleh:", JSON.stringify(coinObjects, null, 2));
 
-            // Periksa apakah ada objek koin yang diperoleh
-            if (coinObjects && coinObjects.length > 0) {
-                const coinObjectId = coinObjects[0].id; // Sesuaikan berdasarkan struktur aktual
+            if (coinObjects && coinObjects.data && coinObjects.data.length > 0) {
+                const coinObjectId = coinObjects.data[0].coinObjectId; // Pastikan menggunakan coinObjectId
                 console.log("ID Objek Koin:", coinObjectId);
 
-                // Bangun transaksi
                 const transaction = {
                     kind: 'moveCall',
-                    packageObjectId: walrusPoolObjectId, // Gunakan walrusPoolObjectId yang diberikan
+                    packageObjectId: walrusPoolObjectId,
                     module: 'wal',
                     function: 'stake',
                     typeArguments: [],
                     arguments: [
                         coinObjectId, // Kirim ID objek koin
-                        config.STAKENODEOPERATOR, // Node operator
+                        config.STAKENODEOPERATOR,
                     ],
                     gasBudget: 10000,
                 };
 
-                // Log objek transaksi untuk debugging
                 console.log("Transaksi yang akan dikirim:", JSON.stringify(transaction, null, 2));
 
-                // Eksekusi transaksi
                 const txBlock = await client.executeTransactionBlock({
                     transaction,
                     options: {
@@ -138,4 +129,3 @@ async function stakeWal() {
 
 // Eksekusi pertaruhan
 stakeWal();
-
