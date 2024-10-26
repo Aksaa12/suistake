@@ -64,8 +64,6 @@ async function getCoinObjects(address) {
         return [];
     }
 }
-
-// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -80,47 +78,51 @@ async function stakeWal() {
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
 
-        // Fetch the coin objects
-        const coinObjects = await getCoinObjects(derivedAddress);
-
-        if (coinObjects.length === 0) {
-            console.error("No coin object found to stake.");
-            return;
-        }
-
-        // Use the first coin object ID for staking
-        const coinObjectId = coinObjects[0].id; // Adjust based on the actual structure of the object
-
-        // Build the transaction
-        const transaction = {
-            kind: 'moveCall',
-            packageObjectId: config.WALRUS_POOL_OBJECT_ID,
-            module: 'wal',
-            function: 'stake',
-            typeArguments: [],
-            arguments: [
-                coinObjectId, // Pass the coin object ID
-                config.STAKENODEOPERATOR, // Node operator
-            ],
-            gasBudget: 10000,
-        };
-
-        // Log the transaction object for debugging
-        console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
-
-        // Execute the transaction
-        const txBlock = await client.executeTransactionBlock({
-            transaction,
-            options: {
-                sender: derivedAddress,
-                gasBudget: 10000,
-            },
+        // Assuming you can get coin objects from balance response
+        const balanceResponse = await client.getBalance({
+            owner: derivedAddress,
+            coinType: config.WAL
         });
 
-        const txStatus = await client.waitForTransaction(txBlock.digest);
-        console.log("Transaction Status:", txStatus ? "Success" : "Failed");
-        console.log("Transaction Hash:", txBlock.digest);
-        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
+        // Check if the balance response contains coin objects
+        if (balanceResponse.coinObjectCount > 0) {
+            // Extract the coin object ID from the balance response
+            const coinObjectId = balanceResponse.coinObjectId; // Adjust according to actual response structure
+            console.log("Coin Object ID:", coinObjectId);
+
+            // Build the transaction
+            const transaction = {
+                kind: 'moveCall',
+                packageObjectId: config.WALRUS_POOL_OBJECT_ID,
+                module: 'wal',
+                function: 'stake',
+                typeArguments: [],
+                arguments: [
+                    coinObjectId, // Pass the coin object ID
+                    config.STAKENODEOPERATOR, // Node operator
+                ],
+                gasBudget: 10000,
+            };
+
+            // Log the transaction object for debugging
+            console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
+
+            // Execute the transaction
+            const txBlock = await client.executeTransactionBlock({
+                transaction,
+                options: {
+                    sender: derivedAddress,
+                    gasBudget: 10000,
+                },
+            });
+
+            const txStatus = await client.waitForTransaction(txBlock.digest);
+            console.log("Transaction Status:", txStatus ? "Success" : "Failed");
+            console.log("Transaction Hash:", txBlock.digest);
+            console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
+        } else {
+            console.error("No coin object found to stake.");
+        }
     } catch (error) {
         console.error("Error during staking:", error.message);
         if (error.response) {
