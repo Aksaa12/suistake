@@ -1,7 +1,7 @@
-// Import necessary modules
-import { JsonRpcProvider, RawSigner } from '@mysten/sui.js/providers/json-rpc-provider';
+import { JsonRpcProvider, RawSigner } from '@mysten/sui.js'; // Pastikan ini ada di versi terbaru
 import { Ed25519Keypair } from '@mysten/sui.js/keypairs/ed25519';
 import { decodeSuiPrivateKey } from "@mysten/sui.js/cryptography";
+
 
 // Load private keys from file
 function loadPrivateKeys() {
