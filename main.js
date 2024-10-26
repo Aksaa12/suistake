@@ -1,7 +1,7 @@
 // Dependencies
 require = require("esm")(module);
-const { SuiClient } = require("@mysten/sui.js");
 const fs = require("fs");
+const { SuiClient } = require('/home/cloudide/suistake/node_modules/@mysten/sui.js');
 
 
 // Konfigurasi
