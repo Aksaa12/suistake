@@ -3,8 +3,9 @@ import fs from 'fs';
 import { SuiClient } from '@mysten/sui/client';
 import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
 import nacl from 'tweetnacl';
+import base58 from 'bs58';
 
-// Function to read private keys from file
+// Load private keys from file
 function loadPrivateKeys() {
     const data = fs.readFileSync('data.txt', 'utf-8');
     return data.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
@@ -31,19 +32,15 @@ privateKeys.forEach((key, index) => {
     }
 });
 
-// Decode the first private key
-const decodedKey = decodeSuiPrivateKey(privateKeys[0]); 
-console.log("Decoded Key:", decodedKey);
+// Decode private key
+const base58Decoded = base58.decode(privateKeys[0].replace('suiprivkey', '')); // Remove prefix and decode
+console.log("Base58 Decoded Key:", base58Decoded);
 
-if (!decodedKey || !decodedKey.secretKey) {
-    throw new Error("Invalid decoded key, missing secretKey.");
-}
-
-// Derive public key from secretKey
-const keyPair = nacl.sign.keyPair.fromSeed(decodedKey.secretKey);
+// Generate key pair
+const keyPair = nacl.sign.keyPair.fromSeed(base58Decoded.slice(0, 32)); // Ensure only first 32 bytes are used for the seed
 const publicKey = keyPair.publicKey;
 
-// Verify address format and derivation
+// Derive the Sui address
 function deriveSuiAddress(publicKey) {
     return `0x${Buffer.from(publicKey).toString('hex')}`;
 }
@@ -51,7 +48,7 @@ function deriveSuiAddress(publicKey) {
 const derivedAddress = deriveSuiAddress(publicKey);
 console.log("Derived Address:", derivedAddress);
 
-// Expected address to match
+// Expected address for verification
 const expectedAddress = '0xc95a0494528da9c7052d6e831eeb2564df253b6950c27ea5f2d679990abbc75e';
 console.log("Expected Address:", expectedAddress);
 console.log("Addresses Match:", derivedAddress === expectedAddress);
@@ -100,7 +97,7 @@ async function stakeWal() {
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-            privateKey: decodedKey.secretKey, // Use secretKey for transaction signing
+            privateKey: base58Decoded, // Pass the decoded private key for signing
         });
 
         const txStatus = await client.getTransactionStatus(tx.hash);
