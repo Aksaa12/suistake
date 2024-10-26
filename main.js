@@ -2,7 +2,7 @@
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
-import { publicKey } from "@mysten/sui/cryptography"; // Import untuk menghasilkan public key
+import nacl from "tweetnacl"; // Menggunakan tweetnacl untuk mengelola kunci
 
 // Konfigurasi
 const config = {
@@ -40,11 +40,11 @@ if (!decodedKey || !decodedKey.secretKey) {
   throw new Error("Gagal mendapatkan secretKey dari private key. Pastikan private key benar.");
 }
 
-// Mengonversi secretKey ke publicKey
-const { publicKey: publicKeyBytes } = publicKey(decodedKey.secretKey); // Generate public key from secret key
+// Dapatkan public key dari secretKey menggunakan tweetnacl
+const { publicKey } = nacl.sign.keyPair.fromSeed(decodedKey.secretKey); // Generate public key from secret key
 
 // Mengonversi publicKey ke format alamat Sui
-const address = `0x${Buffer.from(publicKeyBytes).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
+const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
 
 // Memastikan panjang dan format alamat
 console.log("Address:", address); // Log alamat yang diperoleh dari public key
