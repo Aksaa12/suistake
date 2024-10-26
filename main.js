@@ -59,6 +59,7 @@ const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.
 console.log(Object.getOwnPropertyNames(Object.getPrototypeOf(client)));
 
 // Function to perform staking
+// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -73,12 +74,17 @@ async function stakeWal() {
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
 
-        // Temukan metode yang tepat untuk staking dari objek client
-        // Misalnya, jika ada metode seperti `createStakeTransaction`
-        const tx = await client.createStakeTransaction({
+        // Membangun transaksi staking
+        const transaction = {
+            kind: "stake", // Pastikan ini sesuai dengan spesifikasi API
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
+            sender: derivedAddress,
+        };
+
+        // Mengirim transaksi
+        const tx = await client.executeTransaction(transaction, {
             privateKey: decodedPrivateKey.secretKey,
         });
 
