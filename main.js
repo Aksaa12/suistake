@@ -68,6 +68,7 @@ async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
 
+        // Fetch the WAL balance
         const walBalance = await getWalBalance(derivedAddress);
         console.log("WAL Balance:", walBalance);
 
@@ -85,7 +86,7 @@ async function stakeWal() {
             coinType: config.WAL
         });
 
-        console.log("Balance Retrieved:", balanceResponse);
+        console.log("Balance Retrieved:", JSON.stringify(balanceResponse, null, 2));
 
         // Check for coin object count in the balance response
         if (balanceResponse.coinObjectCount > 0) {
@@ -97,7 +98,7 @@ async function stakeWal() {
                 coinType: config.WAL
             });
 
-            console.log("Coin Objects Retrieved:", coinObjects);
+            console.log("Coin Objects Retrieved:", JSON.stringify(coinObjects, null, 2));
 
             // Check if any coin objects were retrieved
             if (coinObjects && coinObjects.length > 0) {
