@@ -56,6 +56,7 @@ async function getWalBalance(address) {
 }
 
 // Function to perform staking
+// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -69,7 +70,10 @@ async function stakeWal() {
         }
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
-        const tx = await client.stake({
+        
+        // Misalnya, menggunakan submitTransaction jika stake tidak ada
+        const tx = await client.submitTransaction({
+            kind: "stake", // Pastikan jenis transaksi sesuai
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
@@ -87,6 +91,5 @@ async function stakeWal() {
         }
     }
 }
-
 // Execute staking
 stakeWal();
