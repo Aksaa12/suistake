@@ -1,8 +1,25 @@
 // Import required modules
 import fs from 'fs';
 import { SuiClient } from '@mysten/sui/client';
-import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+
+// Load private keys from file
+function loadPrivateKeys() {
+    const data = fs.readFileSync('data.txt', 'utf-8');
+    return data.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
+}
+
+// Load and decode private key
+const privateKeys = loadPrivateKeys();
+const privateKey = privateKeys[0]; // Use the first private key
+
+// Decode private key and derive address
+const decodedPrivateKey = decodeSuiPrivateKey(privateKey);
+const wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
+const derivedAddress = wallet.getPublicKey().toSuiAddress();
+
+console.log("Derived Address:", derivedAddress);
 
 // Configuration
 const config = {
@@ -16,26 +33,11 @@ const config = {
     STAKE_AMOUNT: 1,
 };
 
-// Load and decode the private key from data.txt
-function loadPrivateKey() {
-    const data = fs.readFileSync('data.txt', 'utf-8');
-    return data.trim();
-}
-
 // Create Sui client
-const client = new SuiClient({ network: config.RPC.NETWORK });
-
-// Function to decode and derive the wallet address
-function getWalletDetails() {
-    const privateKey = loadPrivateKey();
-    const decodedPrivateKey = decodeSuiPrivateKey(privateKey);
-    const wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
-    return wallet.getPublicKey().toSuiAddress();
-}
+const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
 
 // Function to get WAL balance
 async function getWalBalance(address) {
-    console.log(`Fetching balance for address: ${address}`);
     try {
         const balance = await client.getBalance(address, config.WAL);
         return balance;
@@ -48,10 +50,9 @@ async function getWalBalance(address) {
 // Function to perform staking
 async function stakeWal() {
     try {
-        const address = getWalletDetails();
-        console.log("Derived Address:", address);
+        console.log("Derived Address:", derivedAddress);
 
-        const walBalance = await getWalBalance(address);
+        const walBalance = await getWalBalance(derivedAddress);
         console.log("WAL Balance:", walBalance);
 
         if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
@@ -64,7 +65,7 @@ async function stakeWal() {
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-            privateKey: loadPrivateKey(),
+            privateKey: decodedPrivateKey.secretKey, // Pass the decoded private key for signing
         });
 
         const txStatus = await client.getTransactionStatus(tx.hash);
