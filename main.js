@@ -36,23 +36,6 @@ const config = {
 // Set up the SuiClient
 const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
 
-// Function to get WAL balance
-async function getWalBalance(address) {
-    try {
-        console.log(`Fetching WAL balance for address: ${address}`);
-        const balance = await client.getBalance({
-            owner: address,
-            coinType: config.WAL
-        });
-        console.log("Balance Retrieved:", balance);
-        return balance.totalBalance;
-    } catch (error) {
-        console.error("Error getting balance:", error.message);
-        return null;
-    }
-}
-
-// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -77,7 +60,7 @@ async function stakeWal() {
         console.log("Coin Objects Response:", JSON.stringify(coinObjectsResponse, null, 2));
 
         // Check if coinObjectsResponse and its data property are defined and is an array
-        if (coinObjectsResponse && Array.isArray(coinObjectsResponse.data)) {
+        if (coinObjectsResponse && coinObjectsResponse.data && Array.isArray(coinObjectsResponse.data)) {
             console.log("Coin Objects Data Length:", coinObjectsResponse.data.length);
             if (coinObjectsResponse.data.length > 0) {
                 const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
@@ -88,7 +71,7 @@ async function stakeWal() {
                     kind: 'move Call',
                     packageObjectId: config.WALRUS_POOL_OBJECT_ID,
                     module: 'wal',
-                    function: 'stake ',
+                    function: 'stake',
                     typeArguments: [],
                     arguments: [
                         coinObjectId,
@@ -125,6 +108,4 @@ async function stakeWal() {
         }
     }
 }
-
-// Execute staking
-stakeWal();
+stakewal()
