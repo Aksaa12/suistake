@@ -36,7 +36,7 @@ const config = {
 // Set up the SuiClient
 const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
 
-// Function to get WAL balance with enhanced error logging
+// Function to get WAL balance
 async function getWalBalance(address) {
     try {
         console.log(`Fetching WAL balance for address: ${address}`);
@@ -51,6 +51,8 @@ async function getWalBalance(address) {
         return null;
     }
 }
+
+// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -65,70 +67,57 @@ async function stakeWal() {
 
         console.log(`Mempertaruhkan ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
 
-        const balanceResponse = await client.getBalance({
+        // Get coin objects
+        const coinObjectsResponse = await client.getCoins({
             owner: derivedAddress,
             coinType: config.WAL
         });
 
-        console.log("Saldo Diperoleh:", JSON.stringify(balanceResponse, null, 2));
+        console.log("Coin Objects Response:", JSON.stringify(coinObjectsResponse, null, 2));
 
-        if (balanceResponse.coinObjectCount > 0) {
-            console.log("Jumlah Objek Koin:", balanceResponse.coinObjectCount);
-            
-            const coinObjects = await client.getCoins({
-                owner: derivedAddress,
-                coinType: config.WAL
+        if (coinObjectsResponse.data && coinObjectsResponse.data.length > 0) {
+            const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
+            console.log("Coin Object ID:", coinObjectId);
+
+            // Create transaction
+            const transaction = {
+                kind: 'moveCall',
+                packageObjectId: config.WALRUS_POOL_OBJECT_ID,
+                module: 'wal',
+                function: 'stake',
+                typeArguments: [],
+                arguments: [
+                    coinObjectId,
+                    config.STAKENODEOPERATOR,
+                ],
+                gasBudget: 10000,
+            };
+
+            console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
+
+            // Execute transaction
+            const txBlock = await client.executeTransactionBlock({
+                transaction,
+                options: {
+                    sender: derivedAddress,
+                    gasBudget: 10000,
+                },
             });
 
-            console.log("Objek Koin Diperoleh:", JSON.stringify(coinObjects, null, 2));
-
-            if (coinObjects && coinObjects.data && coinObjects.data.length > 0) {
-                const coinObjectId = coinObjects.data[0].coinObjectId; // Pastikan menggunakan coinObjectId
-                console.log("ID Objek Koin:", coinObjectId);
-
-                // Gunakan walrusPoolObjectId yang telah Anda berikan
-                const walrusPoolObjectId = "0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f31379f1b7c04244061d43914";
-
-                const transaction = {
-                    kind: 'moveCall',
-                    packageObjectId: walrusPoolObjectId,
-                    module: 'wal',
-                    function: 'stake',
-                    typeArguments: [],
-                    arguments: [
-                        coinObjectId, // Kirim ID objek koin
-                        config.STAKENODEOPERATOR,
-                    ],
-                    gasBudget: 10000,
-                };
-
-                console.log("Transaksi yang akan dikirim:", JSON.stringify(transaction, null, 2));
-
-                const txBlock = await client.executeTransactionBlock({
-                    transaction,
-                    options: {
-                        sender: derivedAddress,
-                        gasBudget: 10000,
-                    },
-                });
-
-                const txStatus = await client.waitForTransaction(txBlock.digest);
-                console.log("Status Transaksi:", txStatus ? "Sukses" : "Gagal");
-                console.log("Hash Transaksi:", txBlock.digest);
-                console.log(`Penjelajah: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
-            } else {
-                console.error("Tidak ada objek koin yang ditemukan untuk dipertaruhkan.");
-            }
+            const txStatus = await client.waitForTransaction(txBlock.digest);
+            console.log("Transaction Status:", txStatus ? "Success" : "Failed");
+            console.log("Transaction Hash:", txBlock.digest);
+            console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
         } else {
-            console.error("Tidak ada objek koin yang ditemukan dalam respons saldo.");
+            console.error("No coin objects found to stake.");
         }
     } catch (error) {
-        console.error("Kesalahan saat mempertaruhkan:", error.message);
+        console.error("Error staking:", error.message);
         if (error.response) {
-            console.error("Data Respons Kesalahan Pertaruhan:", error.response.data);
+            console.error("Error response:", error.response.data);
         }
     }
 }
 
-// Eksekusi pertaruhan
+// Execute staking
 stakeWal();
