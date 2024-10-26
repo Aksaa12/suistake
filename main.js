@@ -42,57 +42,53 @@ if (!decodedKey || !decodedKey.secretKey) {
 }
 
 // Dapatkan public key dari secretKey menggunakan tweetnacl
-// Pastikan secretKey adalah Uint8Array
-if (decodedKey.secretKey instanceof Uint8Array) {
-  const { publicKey } = sign.keyPair.fromSecretKey(decodedKey.secretKey); // Generate public key from secret key
-  const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
-  console.log("Address:", address); // Log alamat yang diperoleh dari public key
+// Menggunakan fromSeed untuk mendapatkan key pair
+const { publicKey } = sign.keyPair.fromSeed(decodedKey.secretKey); // Generate public key from secret key
+const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
+console.log("Address:", address); // Log alamat yang diperoleh dari public key
 
-  // Buat client SUI
-  const client = new SuiClient({ network: config.RPC.NETWORK, privateKey: privateKeys[0] }); // Menggunakan kunci privat pertama
+// Buat client SUI
+const client = new SuiClient({ network: config.RPC.NETWORK, privateKey: privateKeys[0] }); // Menggunakan kunci privat pertama
 
-  // Fungsi untuk mendapatkan saldo WAL
-  async function getWalBalance(address) {
-    const balance = await client.getBalance(address, config.WAL);
-    return balance;
-  }
-
-  // Fungsi untuk melakukan staking
-  async function stakeWal() {
-    try {
-      // Tampilkan alamat yang diperoleh dari public key
-      console.log("Address:", address);
-
-      // Dapatkan saldo WAL
-      const walBalance = await getWalBalance(address);
-      console.log("Saldo WAL:", walBalance);
-
-      // Cek apakah saldo mencukupi untuk staking
-      if (walBalance < config.STAKE_AMOUNT) {
-        console.log("Saldo WAL tidak mencukupi untuk staking.");
-        return;
-      }
-
-      // Lakukan staking
-      console.log(`Proses staking ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
-      const tx = await client.stake({
-        amount: config.STAKE_AMOUNT,
-        stakeNodeOperator: config.STAKENODEOPERATOR,
-        poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-      });
-
-      // Tampilkan status transaksi
-      const txStatus = await client.getTransactionStatus(tx.hash);
-      console.log("Status Transaksi:", txStatus.success ? "Berhasil" : "Gagal");
-      console.log("Hash Transaksi:", tx.hash);
-      console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.hash}`);
-    } catch (error) {
-      console.error("Terjadi kesalahan saat staking:", error.message);
-    }
-  }
-
-  // Eksekusi staking
-  stakeWal();
-} else {
-  throw new Error("secretKey bukan tipe Uint8Array. Pastikan format kunci privat benar.");
+// Fungsi untuk mendapatkan saldo WAL
+async function getWalBalance(address) {
+  const balance = await client.getBalance(address, config.WAL);
+  return balance;
 }
+
+// Fungsi untuk melakukan staking
+async function stakeWal() {
+  try {
+    // Tampilkan alamat yang diperoleh dari public key
+    console.log("Address:", address);
+
+    // Dapatkan saldo WAL
+    const walBalance = await getWalBalance(address);
+    console.log("Saldo WAL:", walBalance);
+
+    // Cek apakah saldo mencukupi untuk staking
+    if (walBalance < config.STAKE_AMOUNT) {
+      console.log("Saldo WAL tidak mencukupi untuk staking.");
+      return;
+    }
+
+    // Lakukan staking
+    console.log(`Proses staking ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
+    const tx = await client.stake({
+      amount: config.STAKE_AMOUNT,
+      stakeNodeOperator: config.STAKENODEOPERATOR,
+      poolObjectId: config.WALRUS_POOL_OBJECT_ID,
+    });
+
+    // Tampilkan status transaksi
+    const txStatus = await client.getTransactionStatus(tx.hash);
+    console.log("Status Transaksi:", txStatus.success ? "Berhasil" : "Gagal");
+    console.log("Hash Transaksi:", tx.hash);
+    console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.hash}`);
+  } catch (error) {
+    console.error("Terjadi kesalahan saat staking:", error.message);
+  }
+}
+
+// Eksekusi staking
+stakeWal();
