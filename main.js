@@ -44,17 +44,12 @@ if (!decodedKey || !decodedKey.secretKey) {
 // Dapatkan public key dari secretKey menggunakan tweetnacl
 const { publicKey } = sign.keyPair.fromSeed(decodedKey.secretKey); // Generate public key from secret key
 
-// Periksa apakah public key sesuai format yang benar
-if (publicKey.length !== 32) {
-  throw new Error("Panjang public key tidak valid.");
-}
-
 // Mengonversi publicKey ke format alamat Sui
 const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
 console.log("Address:", address); // Log alamat yang diperoleh dari public key
 
 // Buat client SUI
-const client = new SuiClient({ network: config.RPC.NETWORK, privateKey: privateKeys[0] }); // Menggunakan kunci privat pertama
+const client = new SuiClient({ network: config.RPC.NETWORK }); // Menggunakan kunci privat pertama dari client
 
 // Fungsi untuk mendapatkan saldo WAL
 async function getWalBalance(address) {
@@ -88,6 +83,7 @@ async function stakeWal() {
       amount: config.STAKE_AMOUNT,
       stakeNodeOperator: config.STAKENODEOPERATOR,
       poolObjectId: config.WALRUS_POOL_OBJECT_ID,
+      privateKey: privateKeys[0], // Tambahkan kunci privat di sini
     });
 
     // Tampilkan status transaksi
