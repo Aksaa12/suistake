@@ -1,8 +1,8 @@
 // Import required modules
 import fs from 'fs';
 import { SuiClient } from '@mysten/sui/client';
-import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
-import { Ed25519Keypair } from '@mysten/sui.js';  // Update this to the sui.js package
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
 // Load private keys from file
 function loadPrivateKeys() {
