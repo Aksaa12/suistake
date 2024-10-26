@@ -3,7 +3,6 @@ import fs from 'fs';
 import { SuiClient } from '@mysten/sui/client';
 import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
 import nacl from 'tweetnacl';
-import base58 from 'bs58';
 
 // Load private keys from file
 function loadPrivateKeys() {
@@ -32,12 +31,12 @@ privateKeys.forEach((key, index) => {
     }
 });
 
-// Decode private key
-const base58Decoded = base58.decode(privateKeys[0].replace('suiprivkey', '')); // Remove prefix and decode
-console.log("Base58 Decoded Key:", base58Decoded);
+// Decode private key (assuming hex encoding after 'suiprivkey' prefix)
+const hexDecoded = Buffer.from(privateKeys[0].slice(11), 'hex'); // Remove prefix and decode
+console.log("Hex Decoded Key:", hexDecoded);
 
 // Generate key pair
-const keyPair = nacl.sign.keyPair.fromSeed(base58Decoded.slice(0, 32)); // Ensure only first 32 bytes are used for the seed
+const keyPair = nacl.sign.keyPair.fromSeed(hexDecoded.slice(0, 32)); // Ensure only first 32 bytes are used for the seed
 const publicKey = keyPair.publicKey;
 
 // Derive the Sui address
@@ -97,7 +96,7 @@ async function stakeWal() {
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-            privateKey: base58Decoded, // Pass the decoded private key for signing
+            privateKey: hexDecoded, // Pass the decoded private key for signing
         });
 
         const txStatus = await client.getTransactionStatus(tx.hash);
