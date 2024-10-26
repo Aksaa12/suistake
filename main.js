@@ -60,6 +60,7 @@ console.log(Object.getOwnPropertyNames(Object.getPrototypeOf(client)));
 
 // Function to perform staking
 // Function to perform staking
+// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -76,22 +77,28 @@ async function stakeWal() {
 
         // Membangun transaksi staking
         const transaction = {
-            kind: "stake", // Pastikan ini sesuai dengan spesifikasi API
-            amount: config.STAKE_AMOUNT,
-            stakeNodeOperator: config.STAKENODEOPERATOR,
-            poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-            sender: derivedAddress,
+            kind: 'moveCall',
+            packageObjectId: config.WAL, // Sesuaikan dengan ID paket yang benar
+            module: 'wal', // Modul yang sesuai
+            function: 'stake', // Nama fungsi untuk staking
+            typeArguments: [],
+            arguments: [
+                config.STAKE_AMOUNT.toString(), // Jumlah yang akan dipertaruhkan
+                config.STAKENODEOPERATOR,
+                config.WALRUS_POOL_OBJECT_ID,
+            ],
+            gasBudget: 10000, // Sesuaikan anggaran gas jika perlu
         };
 
         // Mengirim transaksi
-        const tx = await client.executeTransaction(transaction, {
+        const tx = await client.signAndExecuteTransaction(transaction, {
             privateKey: decodedPrivateKey.secretKey,
         });
 
-        const txStatus = await client.getTransactionStatus(tx.hash);
-        console.log("Transaction Status:", txStatus.success ? "Success" : "Failed");
-        console.log("Transaction Hash:", tx.hash);
-        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.hash}`);
+        const txStatus = await client.waitForTransaction(tx.digest);
+        console.log("Transaction Status:", txStatus ? "Success" : "Failed");
+        console.log("Transaction Hash:", tx.digest);
+        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.digest}`);
     } catch (error) {
         console.error("Error during staking:", error.message);
         if (error.response) {
