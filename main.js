@@ -39,7 +39,11 @@ const config = {
 };
 
 // Create Sui client
-const client = new SuiClient({ network: config.RPC.NETWORK });
+// Adjust client initialization with a direct RPC URL
+const client = new SuiClient({
+    url: "https://fullnode.testnet.sui.io"  // Replace with actual Sui testnet RPC URL if needed
+});
+
 
 // Function to get WAL balance
 async function getWalBalance(address) {
