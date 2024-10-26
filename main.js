@@ -21,15 +21,16 @@ const derivedAddress = wallet.getPublicKey().toSuiAddress();
 
 console.log("Derived Address:", derivedAddress);
 
-// Expected address for verification
-const expectedAddress = '0xc95a0494528da9c7052d6e831eeb2564df253b6950c27ea5f2d679990abbc75e';
-console.log("Expected Address:", expectedAddress);
-console.log("Addresses Match:", derivedAddress === expectedAddress);
+// Validate the address
+if (!isValidSuiAddress(derivedAddress)) {
+    console.error("Invalid Sui Address format:", derivedAddress);
+    return;
+}
 
 // Configuration
 const config = {
     STAKENODEOPERATOR: "0xcf4b9402e7f156bc75082bc07581b0829f081ccfc8c444c71df4536ea33d094a",
-    WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL",
+    WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL", // Check format
     RPC: {
         NETWORK: "testnet",
         EXPLORER: "https://testnet.suivision.xyz/",
@@ -38,12 +39,8 @@ const config = {
     STAKE_AMOUNT: 1,
 };
 
-// Create Sui client
-// Adjust client initialization with a direct RPC URL
-const client = new SuiClient({
-    url: "https://fullnode.testnet.sui.io"  // Replace with actual Sui testnet RPC URL if needed
-});
-
+// Create Sui client with specified RPC URL
+const client = new SuiClient({ url: "https://fullnode.testnet.sui.io" });
 
 // Function to get WAL balance
 async function getWalBalance(address) {
