@@ -77,46 +77,41 @@ async function stakeWal() {
         console.log("Coin Objects Response:", JSON.stringify(coinObjectsResponse, null, 2));
 
         // Check if coinObjectsResponse and its data property are defined
-        if (coinObjectsResponse && coinObjectsResponse.data !== undefined) {
-            console.log("Coin Objects Data Length:", coinObjectsResponse.data.length);
-            if (coinObjectsResponse.data.length > 0) {
-                const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
-                console.log("Coin Object ID:", coinObjectId);
+        if (coinObjectsResponse && Array.isArray(coinObjectsResponse.data) && coinObjectsResponse.data.length > 0) {
+            const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
+            console.log("Coin Object ID:", coinObjectId);
 
-                // Create transaction
-                const transaction = {
-                    kind: 'move Call',
-                    packageObjectId: config.WALRUS_POOL_OBJECT_ID,
-                    module: 'wal',
-                    function: 'stake ',
-                    typeArguments: [],
-                    arguments: [
-                        coinObjectId,
-                        config.STAKENODEOPERATOR,
-                    ],
+            // Create transaction
+            const transaction = {
+                kind: 'move Call',
+                packageObjectId: config.WALRUS_POOL_OBJECT_ID,
+                module: 'wal',
+                function: 'stake ',
+                typeArguments: [],
+                arguments: [
+                    coinObjectId,
+                    config.STAKENODEOPERATOR,
+                ],
+                gasBudget: 10000,
+            };
+
+            console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
+
+            // Execute transaction
+            const txBlock = await client.executeTransactionBlock({
+                transaction,
+                options: {
+                    sender: derivedAddress,
                     gasBudget: 10000,
-                };
+                },
+            });
 
-                console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
-
-                // Execute transaction
-                const txBlock = await client.executeTransactionBlock({
-                    transaction,
-                    options: {
-                        sender: derivedAddress,
-                        gasBudget: 10000,
-                    },
-                });
-
-                const txStatus = await client.waitForTransaction(txBlock.digest);
-                console.log("Transaction Status:", txStatus ? "Success" : "Failed");
-                console.log("Transaction Hash:", txBlock.digest);
-                console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
-            } else {
-                console.error("No coin objects found to stake.");
-            }
+            const txStatus = await client.waitForTransaction(txBlock.digest);
+            console.log("Transaction Status:", txStatus ? "Success" : "Failed");
+            console.log("Transaction Hash:", txBlock.digest);
+            console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
         } else {
-            console.error("No coin objects response received.");
+            console.error("No coin objects found to stake.");
         }
     } catch (error) {
         console.error("Error staking:", error.message);
