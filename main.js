@@ -36,7 +36,7 @@ const config = {
 // Set up the SuiClient
 const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
 
-// Function to get WAL balance with enhanced error logging
+// Function to get WAL balance
 async function getWalBalance(address) {
     try {
         console.log(`Fetching WAL balance for address: ${address}`);
@@ -48,14 +48,11 @@ async function getWalBalance(address) {
         return parseInt(balance.totalBalance, 10); // Convert to number for comparison
     } catch (error) {
         console.error("Error getting balance:", error.message);
-        if (error.response) {
-            console.error("Error Response Data:", error.response.data);
-        }
         return null;
     }
 }
 
-// Function to perform staking
+// Function to perform staking using signAndExecuteTransactionBlock
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -69,10 +66,12 @@ async function stakeWal() {
         }
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
-        const tx = await client.moveCall({
-            packageObjectId: config.WAL, // Change to your staking package if different
-            module: 'staking', // Update to actual module for staking
-            function: 'stake', // Update to actual function for staking
+        
+        // Construct transaction data
+        const txBlock = {
+            packageObjectId: config.WAL, 
+            module: 'staking', // Pastikan ini adalah modul untuk staking di jaringan Anda
+            function: 'stake', // Pastikan ini adalah fungsi staking yang benar
             typeArguments: [],
             arguments: [
                 config.WALRUS_POOL_OBJECT_ID,
@@ -80,13 +79,18 @@ async function stakeWal() {
                 config.STAKE_AMOUNT,
             ],
             gasBudget: 2000,
+        };
+
+        const signedTransaction = await client.signAndExecuteTransactionBlock({
+            transactionBlock: txBlock,
             signer: wallet,
         });
 
-        const txStatus = await client.getTransactionStatus(tx.digest);
+        // Checking transaction status
+        const txStatus = await client.getTransactionStatus(signedTransaction.digest);
         console.log("Transaction Status:", txStatus.success ? "Success" : "Failed");
-        console.log("Transaction Hash:", tx.digest);
-        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.digest}`);
+        console.log("Transaction Hash:", signedTransaction.digest);
+        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${signedTransaction.digest}`);
     } catch (error) {
         console.error("Error during staking:", error.message);
         if (error.response) {
