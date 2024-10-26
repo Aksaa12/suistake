@@ -85,7 +85,7 @@ async function stakeWal() {
                 // Create transaction
                 const transaction = {
                     kind: 'move Call',
-                    packageObjectId: config.WALR US_POOL_OBJECT_ID,
+                    packageObjectId: config.WALRUS_POOL_OBJECT_ID,
                     module: 'wal',
                     function: 'stake',
                     typeArguments: [],
