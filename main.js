@@ -2,7 +2,7 @@
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
-import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; 
+import { randomBytes, generateKeyPair } from "tweetnacl"; // Import tweetnacl
 
 // Konfigurasi
 const config = {
@@ -40,10 +40,9 @@ if (!decodedKey || !decodedKey.secretKey) {
   throw new Error("Gagal mendapatkan secretKey dari private key. Pastikan private key benar.");
 }
 
-// Jika getPublicKeyFromSecretKey tidak ada, gunakan cara lain untuk mendapatkan public key.
-// Sebagai contoh, menggunakan library crypto untuk menghitung public key dari secretKey.
-const { publicKey } = getPublicKey(decodedKey.secretKey); // Pastikan Anda memiliki fungsi ini
-
+// Dapatkan public key dari secretKey menggunakan tweetnacl
+const publicKey = new Uint8Array(32);
+tweetnacl.sign.keyPair.fromSecretKey(decodedKey.secretKey); // Generate public key from secret key
 const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
 console.log("Address:", address); // Log alamat yang diperoleh dari public key
 
