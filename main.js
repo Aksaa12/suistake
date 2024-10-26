@@ -1,8 +1,7 @@
 // Import required modules
 import fs from 'fs';
-import { SuiClient } from '@mysten/sui/client';
+import { SuiClient, Ed25519Keypair } from '@mysten/sui/client';
 import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
-import nacl from 'tweetnacl';
 
 // Load private keys from file
 function loadPrivateKeys() {
@@ -10,41 +9,17 @@ function loadPrivateKeys() {
     return data.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
 }
 
-// Load private keys
+// Load and decode the first private key
 const privateKeys = loadPrivateKeys();
 if (privateKeys.length === 0) {
     throw new Error("No private keys found in data.txt.");
 }
 
-// Validate private keys
-privateKeys.forEach((key, index) => {
-    console.log(`Key ${index + 1}:`, key);
-    if (!key.startsWith('suiprivkey')) {
-        throw new Error(`Invalid private key at line ${index + 1}. Key must start with 'suiprivkey'.`);
-    }
-    if (key.length > 66) {
-        console.warn(`Private key at line ${index + 1} exceeds 66 characters. Trimming to 66 characters.`);
-        key = key.slice(0, 66);
-    }
-    if (key.length !== 66) {
-        throw new Error(`Invalid private key at line ${index + 1}. Key must be 66 characters long.`);
-    }
-});
+// Decode the first private key
+const decodedPrivateKey = decodeSuiPrivateKey(privateKeys[0]);
+const wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
+const derivedAddress = wallet.getPublicKey().toSuiAddress();
 
-// Decode private key (assuming hex encoding after 'suiprivkey' prefix)
-const hexDecoded = Buffer.from(privateKeys[0].slice(11), 'hex'); // Remove prefix and decode
-console.log("Hex Decoded Key:", hexDecoded);
-
-// Generate key pair
-const keyPair = nacl.sign.keyPair.fromSeed(hexDecoded.slice(0, 32)); // Ensure only first 32 bytes are used for the seed
-const publicKey = keyPair.publicKey;
-
-// Derive the Sui address
-function deriveSuiAddress(publicKey) {
-    return `0x${Buffer.from(publicKey).toString('hex')}`;
-}
-
-const derivedAddress = deriveSuiAddress(publicKey);
 console.log("Derived Address:", derivedAddress);
 
 // Expected address for verification
@@ -96,7 +71,7 @@ async function stakeWal() {
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
-            privateKey: hexDecoded, // Pass the decoded private key for signing
+            privateKey: decodedPrivateKey.secretKey, // Pass the decoded private key for signing
         });
 
         const txStatus = await client.getTransactionStatus(tx.hash);
