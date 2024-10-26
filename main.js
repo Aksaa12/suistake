@@ -30,7 +30,11 @@ privateKeys.forEach((key, index) => {
 // Decode private key pertama untuk mendapatkan secretKey
 const decodedKey = decodeSuiPrivateKey(privateKeys[0]); // Gunakan kunci pertama
 console.log("Decoded Key:", decodedKey); // Log hasil decode untuk verifikasi
-console.log("Decoded Secret Key:", decodedKey.secretKey); // Log secretKey untuk verifikasi
+
+// Memastikan decodedKey memiliki properti secretKey
+if (!decodedKey || !decodedKey.secretKey) {
+    throw new Error("Decoded key tidak valid, tidak ada secretKey.");
+}
 
 // Dapatkan public key dari secretKey menggunakan tweetnacl
 const keyPair = nacl.sign.keyPair.fromSeed(decodedKey.secretKey);
