@@ -36,13 +36,17 @@ const config = {
 // Create Sui client
 const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
 
-// Function to get WAL balance
+// Function to get WAL balance with enhanced error logging
 async function getWalBalance(address) {
     try {
+        console.log(`Fetching WAL balance for address: ${address}`);
         const balance = await client.getBalance(address, config.WAL);
         return balance;
     } catch (error) {
         console.error("Error getting balance:", error.message);
+        if (error.response) {
+            console.error("Error Response:", error.response.data);
+        }
         return null;
     }
 }
@@ -74,6 +78,9 @@ async function stakeWal() {
         console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.hash}`);
     } catch (error) {
         console.error("Error during staking:", error.message);
+        if (error.response) {
+            console.error("Staking Error Response:", error.response.data);
+        }
     }
 }
 
