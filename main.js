@@ -1,7 +1,7 @@
 // Import yang diperlukan
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
+import { decodeSuiPrivateKey, getAddressFromSecretKey } from "@mysten/sui/cryptography"; 
 import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; 
 
 // Konfigurasi
@@ -20,15 +20,18 @@ const config = {
 const privateKey = fs.readFileSync("data.txt", "utf8").trim();
 console.log("Private Key:", privateKey); // Log private key untuk memastikan benar
 
-// Decode private key untuk mendapatkan alamat
+// Decode private key untuk mendapatkan secretKey
 const decodedKey = decodeSuiPrivateKey(privateKey);
 console.log("Decoded Key:", decodedKey); // Log hasil decode untuk verifikasi
 
-// Pastikan kita mendapatkan address dari hasil decode
-if (!decodedKey || !decodedKey.address) {
-  throw new Error("Gagal mendapatkan alamat dari private key. Pastikan private key benar.");
+// Pastikan kita mendapatkan secretKey
+if (!decodedKey || !decodedKey.secretKey) {
+  throw new Error("Gagal mendapatkan secretKey dari private key. Pastikan private key benar.");
 }
-const address = decodedKey.address; // Ambil address dari hasil decode
+
+// Dapatkan address dari secretKey
+const address = getAddressFromSecretKey(decodedKey.secretKey);
+console.log("Address:", address); // Log alamat yang diperoleh dari secretKey
 
 // Buat client SUI
 const client = new SuiClient({ network: config.RPC.NETWORK, privateKey });
