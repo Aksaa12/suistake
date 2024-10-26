@@ -1,6 +1,7 @@
 // Dependencies
-const { SuiClient } = require("@mysten/sui.js");
-const fs = require("fs");
+import { SuiClient } from "@mysten/sui.js";
+import fs from "fs";
+
 
 // Konfigurasi
 const config = {
