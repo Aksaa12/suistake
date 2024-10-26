@@ -26,11 +26,12 @@ if (privateKeys.length === 0) {
     throw new Error("Tidak ada kunci privat yang ditemukan di data.txt.");
 }
 
-// Periksa panjang kunci privat
+// Periksa validitas kunci privat
 privateKeys.forEach((key, index) => {
     console.log(`Key ${index + 1}:`, key);
-    if (key.length !== 66) {
-        throw new Error(`Kunci privat tidak valid pada baris ${index + 1}. Panjang kunci harus 66 karakter.`);
+    // Periksa apakah kunci privat dimulai dengan 'suiprivkey' dan panjangnya 66 karakter
+    if (!key.startsWith('suiprivkey') || key.length !== 66) {
+        throw new Error(`Kunci privat tidak valid pada baris ${index + 1}. Kunci harus diawali dengan 'suiprivkey' dan panjangnya 66 karakter.`);
     }
 });
 
@@ -110,11 +111,4 @@ async function stakeWal() {
         const txStatus = await client.getTransactionStatus(tx.hash);
         console.log("Status Transaksi:", txStatus.success ? "Berhasil" : "Gagal");
         console.log("Hash Transaksi:", tx.hash);
-        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${tx.hash}`);
-    } catch (error) {
-        console.error("Terjadi kesalahan saat staking:", error.message);
-    }
-}
-
-// Eksekusi staking
-stakeWal();
+        console.lo
