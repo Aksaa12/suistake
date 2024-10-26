@@ -26,11 +26,11 @@ if (privateKeys.length === 0) {
     throw new Error("Tidak ada kunci privat yang ditemukan di data.txt.");
 }
 
-// Periksa panjang dan format kunci privat
+// Periksa panjang kunci privat
 privateKeys.forEach((key, index) => {
     console.log(`Key ${index + 1}:`, key);
-    if (!key.startsWith('suiprivkey') || key.length !== 66) {
-        throw new Error(`Kunci privat tidak valid pada baris ${index + 1}.`);
+    if (key.length !== 66) {
+        throw new Error(`Kunci privat tidak valid pada baris ${index + 1}. Panjang kunci harus 66 karakter.`);
     }
 });
 
