@@ -12,7 +12,7 @@ function loadPrivateKeys() {
 
 // Validate Sui address format
 function isValidSuiAddress(address) {
-    const regex = /^0x[a-f0-9]{40}$/; // Adjust regex based on the correct Sui address format
+    const regex = /^0x[a-fA-F0-9]{40}$/; // Ensure it matches 0x followed by 40 hex characters
     return regex.test(address);
 }
 
