@@ -33,9 +33,6 @@ const config = {
     STAKE_AMOUNT: 1,
 };
 
-// Set up the SuiClient
-const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
-
 // Function to get WAL balance with enhanced error logging
 async function getWalBalance(address) {
     try {
@@ -55,7 +52,12 @@ async function getWalBalance(address) {
     }
 }
 
-// Function to perform staking
+// Set up the SuiClient
+const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
+
+// Print available methods on the client
+console.log(Object.getOwnPropertyNames(Object.getPrototypeOf(client)));
+
 // Function to perform staking
 async function stakeWal() {
     try {
@@ -70,10 +72,10 @@ async function stakeWal() {
         }
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
-        
-        // Misalnya, menggunakan submitTransaction jika stake tidak ada
-        const tx = await client.submitTransaction({
-            kind: "stake", // Pastikan jenis transaksi sesuai
+
+        // Temukan metode yang tepat untuk staking dari objek client
+        // Misalnya, jika ada metode seperti `createStakeTransaction`
+        const tx = await client.createStakeTransaction({
             amount: config.STAKE_AMOUNT,
             stakeNodeOperator: config.STAKENODEOPERATOR,
             poolObjectId: config.WALRUS_POOL_OBJECT_ID,
@@ -91,5 +93,6 @@ async function stakeWal() {
         }
     }
 }
+
 // Execute staking
 stakeWal();
