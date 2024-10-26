@@ -48,10 +48,6 @@ const { publicKey } = sign.keyPair.fromSeed(decodedKey.secretKey); // Generate p
 const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
 
 // Memastikan panjang dan format alamat
-if (address.length !== 66) {
-  throw new Error("Alamat Sui tidak valid, panjang harus 66 karakter termasuk '0x'");
-}
-
 console.log("Address:", address); // Log alamat yang diperoleh dari public key
 
 // Buat client SUI
@@ -64,6 +60,7 @@ async function getWalBalance(address) {
     return balance;
   } catch (error) {
     console.error("Error getting balance:", error.message);
+    return null; // Kembalikan null jika ada kesalahan
   }
 }
 
@@ -78,7 +75,7 @@ async function stakeWal() {
     console.log("Saldo WAL:", walBalance);
 
     // Cek apakah saldo mencukupi untuk staking
-    if (walBalance < config.STAKE_AMOUNT) {
+    if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
       console.log("Saldo WAL tidak mencukupi untuk staking.");
       return;
     }
