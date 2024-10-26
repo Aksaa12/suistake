@@ -10,6 +10,12 @@ function loadPrivateKeys() {
     return data.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
 }
 
+// Validate Sui address format
+function isValidSuiAddress(address) {
+    const regex = /^0x[a-f0-9]{40}$/; // Adjust regex based on the correct Sui address format
+    return regex.test(address);
+}
+
 // Load and decode private key
 const privateKeys = loadPrivateKeys();
 const privateKey = privateKeys[0];  // Use the first private key
@@ -24,13 +30,18 @@ console.log("Derived Address:", derivedAddress);
 // Validate the address
 if (!isValidSuiAddress(derivedAddress)) {
     console.error("Invalid Sui Address format:", derivedAddress);
-    return;
+    process.exit(1); // Exit the process with a failure code
 }
+
+// Expected address for verification
+const expectedAddress = '0xc95a0494528da9c7052d6e831eeb2564df253b6950c27ea5f2d679990abbc75e';
+console.log("Expected Address:", expectedAddress);
+console.log("Addresses Match:", derivedAddress === expectedAddress);
 
 // Configuration
 const config = {
     STAKENODEOPERATOR: "0xcf4b9402e7f156bc75082bc07581b0829f081ccfc8c444c71df4536ea33d094a",
-    WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL", // Check format
+    WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL",
     RPC: {
         NETWORK: "testnet",
         EXPLORER: "https://testnet.suivision.xyz/",
@@ -39,7 +50,7 @@ const config = {
     STAKE_AMOUNT: 1,
 };
 
-// Create Sui client with specified RPC URL
+// Create Sui client
 const client = new SuiClient({ url: "https://fullnode.testnet.sui.io" });
 
 // Function to get WAL balance
