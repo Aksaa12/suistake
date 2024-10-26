@@ -1,12 +1,8 @@
 // Import yang diperlukan
-// Import yang diperlukan
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; // Updated import for SuiClient
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; // Keep this as is
-// Check if there are other available imports
-// Example: const { AnotherExport } = await import('@mysten/sui/cryptography');
-import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet"; //
-
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { requestSuiFromFaucetV0 } from "@mysten/sui/faucet";
 
 // Konfigurasi
 const config = {
@@ -22,6 +18,7 @@ const config = {
 
 // Muat private key dari file
 const privateKey = fs.readFileSync("data.txt", "utf8").trim();
+const { address } = decodeSuiPrivateKey(privateKey); // Ambil alamat dari private key
 
 // Buat client SUI
 const client = new SuiClient({ network: config.RPC.NETWORK, privateKey });
@@ -35,11 +32,11 @@ async function getWalBalance(address) {
 // Fungsi untuk melakukan staking
 async function stakeWal() {
   try {
-    const address = client.getAddress();
+    // Gunakan address yang sudah diambil dari private key
+    console.log("Address:", address);
 
     // Dapatkan saldo WAL
     const walBalance = await getWalBalance(address);
-    console.log("Address:", address);
     console.log("Saldo WAL:", walBalance);
 
     if (walBalance < config.STAKE_AMOUNT) {
