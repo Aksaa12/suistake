@@ -1,11 +1,9 @@
 // Import yang diperlukan
 import fs from "fs";
 import { SuiClient } from "@mysten/sui/client"; 
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography"; 
-import { randomBytes, generateKeyPair } from "tweetnacl"; // Import tweetnacl
-import pkg from "tweetnacl";
-const { randomBytes, sign } = pkg; // Get randomBytes and sign methods from the default import
-
+import { decodeSuiPrivateKey, Ed25519Keypair } from "@mysten/sui/cryptography"; 
+import pkg from "tweetnacl"; // Default import
+const { randomBytes } = pkg; // Destructure randomBytes
 
 // Konfigurasi
 const config = {
@@ -43,10 +41,9 @@ if (!decodedKey || !decodedKey.secretKey) {
   throw new Error("Gagal mendapatkan secretKey dari private key. Pastikan private key benar.");
 }
 
-// Dapatkan public key dari secretKey menggunakan tweetnacl
-const publicKey = new Uint8Array(32);
-tweetnacl.sign.keyPair.fromSecretKey(decodedKey.secretKey); // Generate public key from secret key
-const address = `0x${Buffer.from(publicKey).toString('hex')}`; // Konversi ke hex dan tambahkan prefix '0x'
+// Dapatkan public key dari secretKey menggunakan Ed25519Keypair
+const wallet = Ed25519Keypair.fromSecretKey(decodedKey.secretKey);
+const address = wallet.getPublicKey().toSuiAddress(); // Mendapatkan alamat dari public key
 console.log("Address:", address); // Log alamat yang diperoleh dari public key
 
 // Buat client SUI
