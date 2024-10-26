@@ -67,6 +67,12 @@ async function stakeWal() {
 
         console.log(`Staking ${config.STAKE_AMOUNT} WAL to node ${config.STAKENODEOPERATOR}...`);
 
+        // Fetch the coin object ID that you want to stake
+        const coinObjectId = await client.getCoinObjectId({
+            owner: derivedAddress,
+            coinType: config.WAL
+        });
+
         // Build the transaction
         const transaction = {
             kind: 'moveCall',
@@ -75,10 +81,10 @@ async function stakeWal() {
             function: 'stake',
             typeArguments: [],
             arguments: [
-                config.STAKE_AMOUNT.toString(),  // Amount to stake
-                config.STAKENODEOPERATOR,         // Node operator
+                coinObjectId, // Pass the coin object ID instead of just the amount
+                config.STAKENODEOPERATOR, // Node operator
             ],
-            gasBudget: 10000, // Adjust gas budget as necessary
+            gasBudget: 10000,
         };
 
         // Log the transaction object for debugging
@@ -94,7 +100,7 @@ async function stakeWal() {
         });
 
         const txStatus = await client.waitForTransaction(txBlock.digest);
-        console.log("Transaction Status:", txStatus ? "Success" : "Failed ");
+        console.log("Transaction Status:", txStatus ? "Success" : "Failed");
         console.log("Transaction Hash:", txBlock.digest);
         console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
     } catch (error) {
