@@ -51,5 +51,5 @@ async function stakeWal() {
     }
 }
 
-// Execute staking
+// Panggil fungsi staking
 stakeWal();
