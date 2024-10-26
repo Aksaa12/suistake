@@ -3,23 +3,14 @@ import fs from 'fs';
 import { SuiClient } from '@mysten/sui/client';
 import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
 import nacl from 'tweetnacl';
-
-// Fungsi untuk memuat private keys dari file
+// Fungsi untuk membaca kunci privat dari file
 function loadPrivateKeys() {
-    try {
-        const data = fs.readFileSync('data.txt', 'utf-8');
-        const keys = data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
-        console.log("Loaded Private Keys:", keys); // Log kunci privat yang dimuat
-        return keys;
-    } catch (error) {
-        console.error("Error reading private keys from file:", error.message);
-        throw error; // Lempar error untuk ditangani di tempat lain
-    }
+  const data = fs.readFileSync('data.txt', 'utf-8');
+  return data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
 }
 
 // Memuat kunci privat dari file
 const privateKeys = loadPrivateKeys();
-console.log("Private Keys:", privateKeys); // Log private keys untuk verifikasi
 
 // Pastikan ada kunci privat yang dimuat
 if (privateKeys.length === 0) {
