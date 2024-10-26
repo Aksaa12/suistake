@@ -19,11 +19,16 @@ if (privateKeys.length === 0) {
 }
 
 // Periksa validitas kunci privat
+// Periksa validitas kunci privat
 privateKeys.forEach((key, index) => {
     console.log(`Key ${index + 1}:`, key);
-    // Periksa apakah kunci privat dimulai dengan 'suiprivkey' dan panjangnya 66 karakter
-    if (!key.startsWith('suiprivkey') || key.length !== 66) {
-        throw new Error(`Kunci privat tidak valid pada baris ${index + 1}. Kunci harus diawali dengan 'suiprivkey' dan panjangnya 66 karakter.`);
+    // Periksa apakah kunci privat dimulai dengan 'suiprivkey'
+    if (!key.startsWith('suiprivkey')) {
+        throw new Error(`Kunci privat tidak valid pada baris ${index + 1}. Kunci harus diawali dengan 'suiprivkey'.`);
+    }
+    // Periksa panjang kunci privat
+    if (key.length !== 66) {
+        throw new Error(`Kunci privat tidak valid pada baris ${index + 1}. Kunci harus memiliki panjang 66 karakter.`);
     }
 });
 
