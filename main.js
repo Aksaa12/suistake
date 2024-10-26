@@ -73,10 +73,11 @@ async function stakeWal() {
             coinType: config.WAL
         });
 
+        // Log the entire response to check its structure
         console.log("Coin Objects Response:", JSON.stringify(coinObjectsResponse, null, 2));
 
-        // Check if coinObjectsResponse is defined and has data
-        if (coinObjectsResponse && coinObjectsResponse.data) {
+        // Check if coinObjectsResponse and its data property are defined
+        if (coinObjectsResponse && coinObjectsResponse.data !== undefined) {
             console.log("Coin Objects Data Length:", coinObjectsResponse.data.length);
             if (coinObjectsResponse.data.length > 0) {
                 const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
