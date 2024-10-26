@@ -1,7 +1,7 @@
 // Import required modules
 import fs from 'fs';
-import { SuiClient, Ed25519Keypair } from '@mysten/sui/client';
-import { decodeSuiPrivateKey } from '@mysten/sui/cryptography';
+import { SuiClient } from '@mysten/sui/client';
+import { Ed25519Keypair, decodeSuiPrivateKey } from '@mysten/sui/cryptography';
 
 // Load private keys from file
 function loadPrivateKeys() {
@@ -9,14 +9,12 @@ function loadPrivateKeys() {
     return data.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
 }
 
-// Load and decode the first private key
+// Load and decode private key
 const privateKeys = loadPrivateKeys();
-if (privateKeys.length === 0) {
-    throw new Error("No private keys found in data.txt.");
-}
+const privateKey = privateKeys[0];  // Use the first private key
 
-// Decode the first private key
-const decodedPrivateKey = decodeSuiPrivateKey(privateKeys[0]);
+// Decode private key and derive address
+const decodedPrivateKey = decodeSuiPrivateKey(privateKey);
 const wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
 const derivedAddress = wallet.getPublicKey().toSuiAddress();
 
