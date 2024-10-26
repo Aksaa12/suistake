@@ -10,12 +10,6 @@ function loadPrivateKeys() {
     return data.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
 }
 
-// Validate Sui address format
-function isValidSuiAddress(address) {
-    const regex = /^0x[a-fA-F0-9]{40}$/; // Ensure it matches 0x followed by 40 hex characters
-    return regex.test(address);
-}
-
 // Load and decode private key
 const privateKeys = loadPrivateKeys();
 const privateKey = privateKeys[0];  // Use the first private key
@@ -26,12 +20,6 @@ const wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
 const derivedAddress = wallet.getPublicKey().toSuiAddress();
 
 console.log("Derived Address:", derivedAddress);
-
-// Validate the address
-if (!isValidSuiAddress(derivedAddress)) {
-    console.error("Invalid Sui Address format:", derivedAddress);
-    process.exit(1); // Exit the process with a failure code
-}
 
 // Expected address for verification
 const expectedAddress = '0xc95a0494528da9c7052d6e831eeb2564df253b6950c27ea5f2d679990abbc75e';
@@ -56,7 +44,9 @@ const client = new SuiClient({ url: "https://fullnode.testnet.sui.io" });
 // Function to get WAL balance
 async function getWalBalance(address) {
     try {
+        console.log(`Fetching balance for address: ${address}`);
         const balance = await client.getBalance(address, config.WAL);
+        console.log("Balance fetched successfully:", balance);
         return balance;
     } catch (error) {
         console.error("Error getting balance:", error.message);
@@ -68,10 +58,12 @@ async function getWalBalance(address) {
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
-
+        
+        // Fetch WAL balance
         const walBalance = await getWalBalance(derivedAddress);
         console.log("WAL Balance:", walBalance);
-
+        
+        // Check for sufficient balance
         if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
             console.log("Insufficient WAL balance for staking.");
             return;
