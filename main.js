@@ -128,6 +128,9 @@ async function stakeWal() {
             }
         } catch (execError) {
             console.error("Kesalahan dalam mengeksekusi transaksi:", execError.message);
+            if (execError.response) {
+                console.error("Respons Eksekusi:", execError.response.data);
+            }
             return;
         }
 
