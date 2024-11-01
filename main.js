@@ -60,8 +60,8 @@ function determineGasBudget() {
     console.log("Chosen Gas Budget:", gasBudget);
     return gasBudget;
 }
+
 // Function to perform staking
-// Simplified Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -84,15 +84,13 @@ async function stakeWal() {
                 coinType: config.WAL
             });
 
-            // Check if response contains the expected data
-            if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data)) {
-                throw new Error("Invalid coin objects response format");
+            if (!coinObjectsResponse || !coinObjectsResponse.data) {
+                throw new Error("Invalid coin objects response format or empty data.");
             }
             if (coinObjectsResponse.data.length === 0) {
                 throw new Error("No WAL coin objects found for staking.");
             }
 
-            // Select the first coin object
             coinObjectId = coinObjectsResponse.data[0].coinObjectId;
             console.log("Coin Object ID:", coinObjectId);
         } catch (fetchError) {
@@ -128,7 +126,6 @@ async function stakeWal() {
             });
             console.log("Transaction Block Response:", JSON.stringify(txBlock, null, 2));
 
-            // Ensure the response contains a digest
             if (!txBlock || !txBlock.digest) {
                 throw new Error("Transaction execution failed or missing digest.");
             }
@@ -153,4 +150,3 @@ async function stakeWal() {
 
 // Execute staking
 stakeWal();
-
