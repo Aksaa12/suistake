@@ -62,7 +62,6 @@ function determineGasBudget() {
 }
 
 // Function to perform staking
-// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -83,46 +82,53 @@ async function stakeWal() {
             coinType: config.WAL
         });
 
-        // Check if coinObjectsResponse and its data are defined and contain entries
-        if (coinObjectsResponse && coinObjectsResponse.data && Array.isArray(coinObjectsResponse.data) && coinObjectsResponse.data.length > 0) {
-            const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
-            console.log("Coin Object ID:", coinObjectId);
-
-            // Determine gas budget within the range
-            const gasBudget = determineGasBudget();
-
-            // Create transaction
-            const transaction = {
-                kind : 'move Call',
-                packageObjectId: config.WALRUS_POOL_OBJECT_ID,
-                module: 'wal',
-                function: 'stake',
-                typeArguments: [],
-                arguments: [
-                    coinObjectId,
-                    config.STAKENODEOPERATOR,
-                ],
-                gasBudget
-            };
-
-            console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
-
-            // Execute transaction
-            const txBlock = await client.executeTransactionBlock({
-                transaction,
-                options: {
-                    sender: derivedAddress,
-                    gasBudget
-                },
-            });
-
-            const txStatus = await client.waitForTransaction(txBlock.digest);
-            console.log("Transaction Status:", txStatus ? "Success" : "Failed");
-            console.log("Transaction Hash:", txBlock.digest);
-            console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
-        } else {
-            console.error("No coin objects found to stake, or response format is unexpected.");
+        // Check if coinObjectsResponse and its data property exist
+        if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data)) {
+            console.error("Failed to retrieve coin objects. The response format is unexpected or data is missing.");
+            console.log("Full coin objects response:", JSON.stringify(coinObjectsResponse, null, 2)); // Log the full response for debugging
+            return;
         }
+
+        if (coinObjectsResponse.data.length === 0) {
+            console.error("No coin objects found for staking.");
+            return;
+        }
+
+        const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
+        console.log("Coin Object ID:", coinObjectId);
+
+        // Determine gas budget within the range
+        const gasBudget = determineGasBudget();
+
+        // Create transaction
+        const transaction = {
+            kind : 'move Call',
+            packageObjectId: config.WALRUS_POOL_OBJECT_ID,
+            module: 'wal',
+            function: 'stake',
+            typeArguments: [],
+            arguments: [
+                coinObjectId,
+                config.STAKENODEOPERATOR,
+            ],
+            gasBudget
+        };
+
+        console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
+
+        // Execute transaction
+        const txBlock = await client.executeTransactionBlock({
+            transaction,
+            options: {
+                sender: derivedAddress,
+                gasBudget
+            },
+        });
+
+        const txStatus = await client.waitForTransaction(txBlock.digest);
+        console.log("Transaction Status:", txStatus ? "Success" : "Failed");
+        console.log("Transaction Hash:", txBlock.digest);
+        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
     } catch (error) {
         console.error("Error staking:", error.message);
         if (error.response) {
@@ -131,6 +137,7 @@ async function stakeWal() {
     }
 }
 
-
 // Execute staking
+stakeWal();
+
 stakeWal();
