@@ -1,27 +1,27 @@
-// Import required modules
+// Import modul yang diperlukan
 import fs from 'fs';
 import { SuiClient } from '@mysten/sui/client';
 import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 
-// Load private keys from file
+// Memuat private key dari file
 function loadPrivateKeys() {
     const data = fs.readFileSync('data.txt', 'utf-8');
-    return data.split('\n').filter(line => line.trim() !== ''); // Remove empty lines
+    return data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
 }
 
-// Load and decode private key
+// Load dan decode private key
 const privateKeys = loadPrivateKeys();
-const privateKey = privateKeys[0]; // Use the first private key
+const privateKey = privateKeys[0]; // Menggunakan private key pertama
 
-// Decode private key and derive address
+// Decode private key dan derive address
 const decodedPrivateKey = decodeSuiPrivateKey(privateKey);
 const wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
 const derivedAddress = wallet.getPublicKey().toSuiAddress();
 
-console.log("Derived Address:", derivedAddress);
+console.log("Alamat yang Diturunkan:", derivedAddress);
 
-// Configuration
+// Konfigurasi
 const config = {
     STAKENODEOPERATOR: "0xcf4b9402e7f156bc75082bc07581b0829f081ccfc8c444c71df4536ea33d094a",
     WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL",
@@ -35,39 +35,39 @@ const config = {
     GAS_BUDGET_MAX: 10000
 };
 
-// Set up the SuiClient
+// Set up SuiClient
 const client = new SuiClient({ url: `https://fullnode.${config.RPC.NETWORK}.sui.io` });
 
-// Function to get WAL balance
+// Fungsi untuk mendapatkan saldo WAL
 async function getWalBalance(address) {
     try {
-        console.log(`Fetching WAL balance for address: ${address}`);
+        console.log(`Mengambil saldo WAL untuk alamat: ${address}`);
         const balance = await client.getBalance({
             owner: address,
             coinType: config.WAL
         });
-        console.log("Balance Retrieved:", balance);
+        console.log("Saldo yang Diperoleh:", balance);
         return balance.totalBalance;
     } catch (error) {
-        console.error("Error getting balance:", error.message);
+        console.error("Kesalahan dalam mendapatkan saldo:", error.message);
         return null;
     }
 }
 
-// Function to determine gas budget within a range
+// Fungsi untuk menentukan gas budget secara acak dalam rentang tertentu
 function determineGasBudget() {
     const gasBudget = Math.floor(Math.random() * (config.GAS_BUDGET_MAX - config.GAS_BUDGET_MIN + 1)) + config.GAS_BUDGET_MIN;
-    console.log("Chosen Gas Budget:", gasBudget);
+    console.log("Gas Budget yang Dipilih:", gasBudget);
     return gasBudget;
 }
 
-// Function to perform staking
+// Fungsi untuk melakukan staking WAL
 async function stakeWal() {
     try {
-        console.log("Derived Address:", derivedAddress);
+        console.log("Alamat yang Diturunkan:", derivedAddress);
 
         const walBalance = await getWalBalance(derivedAddress);
-        console.log("WAL Balance:", walBalance);
+        console.log("Saldo WAL:", walBalance);
 
         if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
             console.log("Saldo WAL tidak cukup untuk dipertaruhkan.");
@@ -76,7 +76,7 @@ async function stakeWal() {
 
         console.log(`Mempertaruhkan ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
 
-        // Fetch WAL coin objects for staking
+        // Mengambil objek koin WAL untuk staking
         let coinObjectId;
         try {
             const coinObjectsResponse = await client.getCoins({
@@ -84,24 +84,25 @@ async function stakeWal() {
                 coinType: config.WAL
             });
 
+            // Validasi apakah data ada
             if (!coinObjectsResponse || !coinObjectsResponse.data) {
-                throw new Error("Invalid coin objects response format or empty data.");
+                throw new Error("Format respons objek koin tidak valid atau data kosong.");
             }
             if (coinObjectsResponse.data.length === 0) {
-                throw new Error("No WAL coin objects found for staking.");
+                throw new Error("Tidak ada objek koin WAL yang ditemukan untuk staking.");
             }
 
             coinObjectId = coinObjectsResponse.data[0].coinObjectId;
             console.log("Coin Object ID:", coinObjectId);
         } catch (fetchError) {
-            console.error("Error retrieving WAL coin objects:", fetchError.message);
+            console.error("Kesalahan dalam mengambil objek koin WAL:", fetchError.message);
             return;
         }
 
-        // Determine a dynamic gas budget
+        // Menentukan gas budget secara dinamis
         const gasBudget = determineGasBudget();
 
-        // Prepare transaction details
+        // Persiapan detail transaksi
         const transaction = {
             kind: 'moveCall',
             packageObjectId: config.WALRUS_POOL_OBJECT_ID,
@@ -112,9 +113,9 @@ async function stakeWal() {
             gasBudget
         };
 
-        console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
+        console.log("Transaksi yang akan dikirim:", JSON.stringify(transaction, null, 2));
 
-        // Execute transaction block
+        // Eksekusi blok transaksi
         let txBlock;
         try {
             txBlock = await client.executeTransactionBlock({
@@ -124,29 +125,29 @@ async function stakeWal() {
                     gasBudget
                 },
             });
-            console.log("Transaction Block Response:", JSON.stringify(txBlock, null, 2));
+            console.log("Respons Blok Transaksi:", JSON.stringify(txBlock, null, 2));
 
             if (!txBlock || !txBlock.digest) {
-                throw new Error("Transaction execution failed or missing digest.");
+                throw new Error("Eksekusi transaksi gagal atau digest hilang.");
             }
         } catch (execError) {
-            console.error("Error executing transaction:", execError.message);
+            console.error("Kesalahan dalam mengeksekusi transaksi:", execError.message);
             return;
         }
 
-        // Await confirmation
+        // Menunggu konfirmasi
         try {
             const txStatus = await client.waitForTransaction(txBlock.digest);
-            console.log("Transaction Status:", txStatus ? "Success" : "Failed");
-            console.log("Transaction Hash:", txBlock.digest);
+            console.log("Status Transaksi:", txStatus ? "Sukses" : "Gagal");
+            console.log("Hash Transaksi:", txBlock.digest);
             console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
         } catch (confirmError) {
-            console.error("Error confirming transaction:", confirmError.message);
+            console.error("Kesalahan dalam mengonfirmasi transaksi:", confirmError.message);
         }
     } catch (error) {
-        console.error("Staking process encountered an error:", error.message);
+        console.error("Proses staking mengalami kesalahan:", error.message);
     }
 }
 
-// Execute staking
+// Eksekusi staking
 stakeWal();
