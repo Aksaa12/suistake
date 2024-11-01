@@ -82,9 +82,11 @@ async function stakeWal() {
             coinType: config.WAL
         });
 
+        // Additional debugging for coinObjectsResponse
+        console.log("Coin Objects Response:", JSON.stringify(coinObjectsResponse, null, 2));
+
         if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data) || coinObjectsResponse.data.length === 0) {
             console.error("No coin objects found for staking, or response format is unexpected.");
-            console.log("Full coin objects response:", JSON.stringify(coinObjectsResponse, null, 2)); // Log the full response for debugging
             return;
         }
 
@@ -96,7 +98,7 @@ async function stakeWal() {
 
         // Create transaction
         const transaction = {
-            kind: 'move Call',
+            kind: 'moveCall',
             packageObjectId: config.WALRUS_POOL_OBJECT_ID,
             module: 'wal',
             function: 'stake',
@@ -116,7 +118,7 @@ async function stakeWal() {
             options: {
                 sender: derivedAddress,
                 gasBudget
-            },
+            }
         });
 
         // Log the response of txBlock for debugging
@@ -140,4 +142,5 @@ async function stakeWal() {
     }
 }
 
+// Execute staking
 stakeWal();
