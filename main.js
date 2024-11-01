@@ -60,7 +60,6 @@ function determineGasBudget() {
     console.log("Chosen Gas Budget:", gasBudget);
     return gasBudget;
 }
-
 // Function to perform staking
 async function stakeWal() {
     try {
@@ -76,27 +75,31 @@ async function stakeWal() {
 
         console.log(`Mempertaruhkan ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
 
-        // Get coin objects
+        // Get coin objects and validate response
         const coinObjectsResponse = await client.getCoins({
             owner: derivedAddress,
             coinType: config.WAL
         });
 
-        // Additional debugging for coinObjectsResponse
-        console.log("Coin Objects Response:", JSON.stringify(coinObjectsResponse, null, 2));
+        // Enhanced check for data validity
+        if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data)) {
+            console.error("Coin objects response is missing or invalid.");
+            console.log("Full coin objects response:", JSON.stringify(coinObjectsResponse, null, 2));
+            return;
+        }
 
-        if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data) || coinObjectsResponse.data.length === 0) {
-            console.error("No coin objects found for staking, or response format is unexpected.");
+        if (coinObjectsResponse.data.length === 0) {
+            console.error("No WAL coin objects available for staking.");
             return;
         }
 
         const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
         console.log("Coin Object ID:", coinObjectId);
 
-        // Determine gas budget within the range
+        // Determine gas budget
         const gasBudget = determineGasBudget();
 
-        // Create transaction
+        // Prepare transaction details
         const transaction = {
             kind: 'moveCall',
             packageObjectId: config.WALRUS_POOL_OBJECT_ID,
@@ -118,18 +121,18 @@ async function stakeWal() {
             options: {
                 sender: derivedAddress,
                 gasBudget
-            }
+            },
         });
 
-        // Log the response of txBlock for debugging
+        // Validate and log response
         console.log("Transaction Block Response:", JSON.stringify(txBlock, null, 2));
 
-        // Check if txBlock and txBlock.digest are defined
         if (!txBlock || !txBlock.digest) {
-            console.error("Transaction execution failed or digest is missing.");
+            console.error("Transaction execution failed or missing digest.");
             return;
         }
 
+        // Await transaction confirmation
         const txStatus = await client.waitForTransaction(txBlock.digest);
         console.log("Transaction Status:", txStatus ? "Success" : "Failed");
         console.log("Transaction Hash:", txBlock.digest);
