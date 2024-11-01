@@ -62,6 +62,7 @@ function determineGasBudget() {
 }
 
 // Function to perform staking
+// Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -82,10 +83,8 @@ async function stakeWal() {
             coinType: config.WAL
         });
 
-        // Log the entire response to check its structure
-        console.log("Coin Objects Response:", JSON.stringify(coinObjectsResponse, null, 2));
-
-        if (coinObjectsResponse && coinObjectsResponse.data && coinObjectsResponse.data.length > 0) {
+        // Check if coinObjectsResponse and its data are defined and contain entries
+        if (coinObjectsResponse && coinObjectsResponse.data && Array.isArray(coinObjectsResponse.data) && coinObjectsResponse.data.length > 0) {
             const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
             console.log("Coin Object ID:", coinObjectId);
 
@@ -122,7 +121,7 @@ async function stakeWal() {
             console.log("Transaction Hash:", txBlock.digest);
             console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
         } else {
-            console.error("No coin objects found to stake.");
+            console.error("No coin objects found to stake, or response format is unexpected.");
         }
     } catch (error) {
         console.error("Error staking:", error.message);
@@ -131,6 +130,7 @@ async function stakeWal() {
         }
     }
 }
+
 
 // Execute staking
 stakeWal();
