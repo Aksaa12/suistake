@@ -82,15 +82,9 @@ async function stakeWal() {
             coinType: config.WAL
         });
 
-        // Check if coinObjectsResponse and its data property exist
-        if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data)) {
-            console.error("Failed to retrieve coin objects. The response format is unexpected or data is missing.");
+        if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data) || coinObjectsResponse.data.length === 0) {
+            console.error("No coin objects found for staking, or response format is unexpected.");
             console.log("Full coin objects response:", JSON.stringify(coinObjectsResponse, null, 2)); // Log the full response for debugging
-            return;
-        }
-
-        if (coinObjectsResponse.data.length === 0) {
-            console.error("No coin objects found for staking.");
             return;
         }
 
@@ -102,7 +96,7 @@ async function stakeWal() {
 
         // Create transaction
         const transaction = {
-            kind : 'move Call',
+            kind: 'move Call',
             packageObjectId: config.WALRUS_POOL_OBJECT_ID,
             module: 'wal',
             function: 'stake',
@@ -125,6 +119,15 @@ async function stakeWal() {
             },
         });
 
+        // Log the response of txBlock for debugging
+        console.log("Transaction Block Response:", JSON.stringify(txBlock, null, 2));
+
+        // Check if txBlock and txBlock.digest are defined
+        if (!txBlock || !txBlock.digest) {
+            console.error("Transaction execution failed or digest is missing.");
+            return;
+        }
+
         const txStatus = await client.waitForTransaction(txBlock.digest);
         console.log("Transaction Status:", txStatus ? "Success" : "Failed");
         console.log("Transaction Hash:", txBlock.digest);
@@ -136,8 +139,5 @@ async function stakeWal() {
         }
     }
 }
-
-// Execute staking
-stakeWal();
 
 stakeWal();
