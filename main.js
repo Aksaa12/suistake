@@ -84,11 +84,7 @@ async function stakeWal() {
                 coinType: config.WAL
             });
 
-            // Validasi apakah data ada
-            if (!coinObjectsResponse || !coinObjectsResponse.data) {
-                throw new Error("Format respons objek koin tidak valid atau data kosong.");
-            }
-            if (coinObjectsResponse.data.length === 0) {
+            if (!coinObjectsResponse || !coinObjectsResponse.data || coinObjectsResponse.data.length === 0) {
                 throw new Error("Tidak ada objek koin WAL yang ditemukan untuk staking.");
             }
 
