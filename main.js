@@ -61,6 +61,7 @@ function determineGasBudget() {
     return gasBudget;
 }
 // Function to perform staking
+// Simplified Function to perform staking
 async function stakeWal() {
     try {
         console.log("Derived Address:", derivedAddress);
@@ -75,28 +76,31 @@ async function stakeWal() {
 
         console.log(`Mempertaruhkan ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
 
-        // Get coin objects and validate response
-        const coinObjectsResponse = await client.getCoins({
-            owner: derivedAddress,
-            coinType: config.WAL
-        });
+        // Fetch WAL coin objects for staking
+        let coinObjectId;
+        try {
+            const coinObjectsResponse = await client.getCoins({
+                owner: derivedAddress,
+                coinType: config.WAL
+            });
 
-        // Enhanced check for data validity
-        if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data)) {
-            console.error("Coin objects response is missing or invalid.");
-            console.log("Full coin objects response:", JSON.stringify(coinObjectsResponse, null, 2));
+            // Check if response contains the expected data
+            if (!coinObjectsResponse || !coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data)) {
+                throw new Error("Invalid coin objects response format");
+            }
+            if (coinObjectsResponse.data.length === 0) {
+                throw new Error("No WAL coin objects found for staking.");
+            }
+
+            // Select the first coin object
+            coinObjectId = coinObjectsResponse.data[0].coinObjectId;
+            console.log("Coin Object ID:", coinObjectId);
+        } catch (fetchError) {
+            console.error("Error retrieving WAL coin objects:", fetchError.message);
             return;
         }
 
-        if (coinObjectsResponse.data.length === 0) {
-            console.error("No WAL coin objects available for staking.");
-            return;
-        }
-
-        const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
-        console.log("Coin Object ID:", coinObjectId);
-
-        // Determine gas budget
+        // Determine a dynamic gas budget
         const gasBudget = determineGasBudget();
 
         // Prepare transaction details
@@ -106,44 +110,47 @@ async function stakeWal() {
             module: 'wal',
             function: 'stake',
             typeArguments: [],
-            arguments: [
-                coinObjectId,
-                config.STAKENODEOPERATOR,
-            ],
+            arguments: [coinObjectId, config.STAKENODEOPERATOR],
             gasBudget
         };
 
         console.log("Transaction to be sent:", JSON.stringify(transaction, null, 2));
 
-        // Execute transaction
-        const txBlock = await client.executeTransactionBlock({
-            transaction,
-            options: {
-                sender: derivedAddress,
-                gasBudget
-            },
-        });
+        // Execute transaction block
+        let txBlock;
+        try {
+            txBlock = await client.executeTransactionBlock({
+                transaction,
+                options: {
+                    sender: derivedAddress,
+                    gasBudget
+                },
+            });
+            console.log("Transaction Block Response:", JSON.stringify(txBlock, null, 2));
 
-        // Validate and log response
-        console.log("Transaction Block Response:", JSON.stringify(txBlock, null, 2));
-
-        if (!txBlock || !txBlock.digest) {
-            console.error("Transaction execution failed or missing digest.");
+            // Ensure the response contains a digest
+            if (!txBlock || !txBlock.digest) {
+                throw new Error("Transaction execution failed or missing digest.");
+            }
+        } catch (execError) {
+            console.error("Error executing transaction:", execError.message);
             return;
         }
 
-        // Await transaction confirmation
-        const txStatus = await client.waitForTransaction(txBlock.digest);
-        console.log("Transaction Status:", txStatus ? "Success" : "Failed");
-        console.log("Transaction Hash:", txBlock.digest);
-        console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
-    } catch (error) {
-        console.error("Error staking:", error.message);
-        if (error.response) {
-            console.error("Error response:", error.response.data);
+        // Await confirmation
+        try {
+            const txStatus = await client.waitForTransaction(txBlock.digest);
+            console.log("Transaction Status:", txStatus ? "Success" : "Failed");
+            console.log("Transaction Hash:", txBlock.digest);
+            console.log(`Explorer: ${config.RPC.EXPLORER}tx/${txBlock.digest}`);
+        } catch (confirmError) {
+            console.error("Error confirming transaction:", confirmError.message);
         }
+    } catch (error) {
+        console.error("Staking process encountered an error:", error.message);
     }
 }
 
 // Execute staking
 stakeWal();
+
