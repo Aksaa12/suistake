@@ -70,16 +70,13 @@ async function stakeWal() {
         });
 
         // Tambahkan pemeriksaan untuk memastikan coinObjectsResponse valid
-        console.log("Response Objek Koin:", coinObjectsResponse); // Debugging untuk melihat respons
-        if (!coinObjectsResponse || !coinObjectsResponse.data) {
-            console.error("Error: Respons koin tidak valid atau kosong.");
-            return;
-        }
+        console.log("Response Objek Koin:", JSON.stringify(coinObjectsResponse, null, 2)); // Debugging untuk melihat respons
 
-        // Pastikan ada koin yang ditemukan
-        const coinObjects = coinObjectsResponse.data || []; // Menghindari akses length jika data tidak ada
-
-        if (coinObjects.length === 0) {
+        // Pastikan coinObjectsResponse.data ada dan merupakan array
+        const coinObjects = Array.isArray(coinObjectsResponse.data) ? coinObjectsResponse.data : [];
+        
+        // Periksa apakah coinObjects ada
+        if (!coinObjects || coinObjects.length === 0) {
             console.error("Error: Tidak ada objek koin WAL yang ditemukan untuk staking.");
             return;
         }
