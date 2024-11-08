@@ -47,7 +47,7 @@ export default class Core {
     }
   }
 
-  async stakeOneWalToOperator() {
+async stakeOneWalToOperator() {
     try {
         // Ambil koin WAL yang tersedia
         const coins = await this.client.getCoins({
@@ -61,7 +61,7 @@ export default class Core {
         console.log("Coin object:", coin); // Debugging log
 
         // Mengecek apakah saldo cukup
-        if (!coin || !coin.balance || coin.balance < balance) {
+        if (!coin || !coin.balance || BigInt(coin.balance) < BigInt(balance * MIST_PER_SUI)) {
             throw new Error("Not enough WAL balance to stake");
         }
 
@@ -120,7 +120,6 @@ export default class Core {
         throw error;
     }
 }
-
 
   // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
