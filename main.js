@@ -129,26 +129,31 @@ export default class Core {
     }
   }
 
-    // Fungsi untuk mengeksekusi transaksi
+      // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
     try {
       logger.info("Executing transaction...");
+
       const result = await this.client.signAndExecuteTransaction({
         signer: this.wallet,
         transaction: transaction,
       });
 
+      // Log the entire result for inspection
+      logger.info("Transaction result:", result);
+
+      // Check if result.digest is present
       if (result && result.digest) {
         logger.info("Transaction executed successfully: " + result.digest);
       } else {
-        logger.error("Transaction executed, but no digest found in the response.");
-        throw new Error("Transaction result does not contain a digest.");
+        throw new Error("Transaction result does not contain a digest or is malformed.");
       }
     } catch (error) {
       logger.error("Transaction execution failed: " + error.message);
       throw new Error("Transaction execution failed: " + error.message);
     }
   }
+
 
 
   // Fungsi utama untuk menjalankan staking
