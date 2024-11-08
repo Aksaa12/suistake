@@ -1,133 +1,56 @@
-import fs from 'fs';
-import { SuiClient } from '@mysten/sui/client';
-import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import requests
+import json
 
-// Memuat private key dari file
-function loadPrivateKeys() {
-    const data = fs.readFileSync('data.txt', 'utf-8');
-    return data.split('\n').filter(line => line.trim() !== ''); // Menghapus baris kosong
-}
+# URL JSON-RPC untuk testnet SUI
+SUI_RPC_URL = "https://fullnode.testnet.sui.io:443"  # Sesuaikan jika berbeda
 
-// Load dan decode private key
-const privateKeys = loadPrivateKeys();
-const privateKey = privateKeys[0]; // Menggunakan private key pertama
+# Alamat objek Walrus Pool untuk staking
+WALRUS_POOL_OBJECT_ID = "0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f31379f1b7c04244061d43914"
 
-// Decode private key dan derive address
-const decodedPrivateKey = decodeSuiPrivateKey(privateKey);
-const wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
-const derivedAddress = wallet.getPublicKey().toSuiAddress();
+# Alamat koin WAL
+WAL_COIN_ADDRESS = "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL"
 
-console.log("Alamat yang Diturunkan:", derivedAddress);
+# Fungsi untuk membaca private key dari file data.txt
+def load_private_key(file_path="data.txt"):
+    with open(file_path, "r") as file:
+        private_key = file.read().strip()  # Membaca dan membersihkan spasi putih atau newline
+    return private_key
 
-// Konfigurasi
-const config = {
-    STAKENODEOPERATOR: "0xcf4b9402e7f156bc75082bc07581b0829f081ccfc8c444c71df4536ea33d094a",
-    WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL",
-    WALRUS_POOL_OBJECT_ID: "0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f31379f1b7c04244061d43914",
-    STAKE_AMOUNT: 1,
-    GAS_BUDGET: 5000 // Memperbaiki gas budget ke angka tetap untuk testing
-};
+# Fungsi untuk mengirim transaksi staking
+def stake_wal_to_walrus_pool():
+    # Membaca private key dari file
+    private_key = load_private_key()
 
-// Set up SuiClient
-const client = new SuiClient({ url: `https://fullnode.testnet.sui.io` });
-
-// Fungsi untuk mendapatkan saldo WAL
-async function getWalBalance(address) {
-    try {
-        console.log(`Mengambil saldo WAL untuk alamat: ${address}`);
-        const balance = await client.getBalance({
-            owner: address,
-            coinType: config.WAL
-        });
-        console.log("Saldo yang Diperoleh:", balance);
-        return balance.totalBalance;
-    } catch (error) {
-        console.error("Kesalahan dalam mendapatkan saldo:", error.message);
-        return null;
-    }
-}
-
-// Fungsi untuk melakukan staking WAL
-async function stakeWal() {
-    try {
-        console.log("Alamat yang Diturunkan:", derivedAddress);
-
-        const walBalance = await getWalBalance(derivedAddress);
-        console.log("Saldo WAL:", walBalance);
-
-        if (walBalance === null || walBalance < config.STAKE_AMOUNT) {
-            console.log("Saldo WAL tidak cukup untuk dipertaruhkan.");
-            return;
-        }
-
-        console.log(`Mempertaruhkan ${config.STAKE_AMOUNT} WAL ke node ${config.STAKENODEOPERATOR}...`);
-
-        // Mengambil objek koin WAL untuk staking
-        const coinObjectsResponse = await client.getCoins({
-            owner: derivedAddress,
-            coinType: config.WAL
-        });
-
-        // Cek apakah coinObjectsResponse ada
-        console.log("Respons Objek Koin:", JSON.stringify(coinObjectsResponse, null, 2));
-
-        if (!coinObjectsResponse || typeof coinObjectsResponse !== 'object') {
-            console.error("Error: Respons objek koin tidak valid.");
-            return;
-        }
-
-        // Tambahkan pemeriksaan untuk memastikan data ada
-        if (!coinObjectsResponse.data || !Array.isArray(coinObjectsResponse.data)) {
-            console.error("Error: Tidak ada objek koin WAL yang ditemukan untuk staking.");
-            return;
-        }
-
-        if (coinObjectsResponse.data.length === 0) {
-            console.error("Error: Data objek koin kosong.");
-            return;
-        }
-
-        const coinObjectId = coinObjectsResponse.data[0].coinObjectId;
-        console.log("Coin Object ID:", coinObjectId);
-
-        // Persiapan detail transaksi
-        const transaction = {
-            kind: 'moveCall',
-            packageObjectId: config.WALRUS_POOL_OBJECT_ID,
-            module: 'wal',
-            function: 'stake',
-            typeArguments: [],
-            arguments: [coinObjectId, config.STAKENODEOPERATOR],
-            gasBudget: config.GAS_BUDGET // Menggunakan gas budget tetap
-        };
-
-        console.log("Transaksi yang akan dikirim:", JSON.stringify(transaction, null, 2));
-
-        // Eksekusi blok transaksi
-        const txBlock = await client.executeTransactionBlock({
-            transaction,
-            options: {
-                sender: derivedAddress,
-                gasBudget: config.GAS_BUDGET
+    # Membuat payload transaksi staking
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "sui_moveCall",
+        "id": 1,
+        "params": [
+            None,  # Tidak memerlukan alamat dompet karena kita menggunakan private key
+            {
+                "package_object_id": "0x2",  # Paket staking default; sesuaikan jika berbeda
+                "module": "staking",
+                "function": "stake",
+                "type_arguments": [WAL_COIN_ADDRESS],  # Alamat koin WAL
+                "arguments": [
+                    WALRUS_POOL_OBJECT_ID,  # Alamat objek Walrus Pool
+                    "1"  # Jumlah WAL yang akan di-stake
+                ],
+                "gas_budget": 10000  # Anggaran gas, sesuaikan jika diperlukan
             },
-        });
-
-        console.log("Respons Blok Transaksi:", JSON.stringify(txBlock, null, 2));
-
-        if (!txBlock || !txBlock.digest) {
-            throw new Error("Eksekusi transaksi gagal atau digest hilang.");
-        }
-
-        // Menunggu konfirmasi
-        const txStatus = await client.waitForTransaction(txBlock.digest);
-        console.log("Status Transaksi:", txStatus ? "Sukses" : "Gagal");
-        console.log("Hash Transaksi:", txBlock.digest);
-        console.log(`Explorer: https://testnet.suivision.xyz/tx/${txBlock.digest}`);
-    } catch (error) {
-        console.error("Proses staking mengalami kesalahan:", error.message);
+            private_key  # Menggunakan private key dari file
+        ]
     }
-}
 
-// Eksekusi staking
-stakeWal();
+    # Kirim permintaan JSON-RPC ke node SUI
+    response = requests.post(SUI_RPC_URL, headers={"Content-Type": "application/json"}, data=json.dumps(payload))
+    result = response.json()
+
+    if "error" in result:
+        print("Terjadi kesalahan:", result["error"])
+    else:
+        print("Transaksi staking berhasil, ID transaksi:", result["result"]["tx_digest"])
+
+# Menjalankan fungsi staking otomatis
+stake_wal_to_walrus_pool()
