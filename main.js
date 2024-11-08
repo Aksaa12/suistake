@@ -47,10 +47,10 @@ export default class Core {
     }
   }
 
-  // Fungsi untuk staking 1 WAL ke operator
-  // Fungsi untuk staking 1 WAL ke operator
+// Fungsi untuk staking 1 WAL ke operator
 async stakeOneWalToOperator() {
     try {
+      // Mengambil saldo coin WAL
       const coins = await this.client.getCoins({
         owner: this.address,
         coinType: COINENUM.WAL,
@@ -59,6 +59,7 @@ async stakeOneWalToOperator() {
       const coin = coins.data[0];
       const balance = 1; // Hanya staking 1 unit WAL
 
+      // Mengecek apakah saldo cukup
       if (coin.balance < balance) {
         throw new Error("Not enough WAL balance to stake");
       }
@@ -80,15 +81,10 @@ async stakeOneWalToOperator() {
         },
       });
 
-      // Memeriksa apakah atribut 'Shared' ada pada poolObject.data.owner
-      if (!poolObject.data.owner || !poolObject.data.owner.Shared) {
-        throw new Error("Shared attribute is missing from pool object");
-      }
-
+      // Membuat transaksi staking
       const transaction = new Transaction();
       const sharedPoolObject = transaction.sharedObjectRef({
         objectId: poolObject.data.objectId,
-        initialSharedVersion: poolObject.data.owner.Shared.initial_shared_version,
         mutable: true,
       });
 
@@ -98,7 +94,7 @@ async stakeOneWalToOperator() {
         [balance * MIST_PER_SUI] // Convert 1 WAL to MIST for staking
       );
 
-      // Membuat transaksi staking
+      // Membuat transaksi untuk staking ke pool
       const stakedCoin = transaction.moveCall({
         target: `${this.walrusAddress}::staking::stake_with_pool`,
         arguments: [
@@ -112,10 +108,11 @@ async stakeOneWalToOperator() {
       await transaction.transferObjects([stakedCoin], this.address);
       await this.executeTx(transaction);
     } catch (error) {
-      logger.error("Error during staking: " + error.message);
+      console.error("Error during staking: " + error.message);
       throw error;
     }
 }
+
 
   // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
