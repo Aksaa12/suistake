@@ -48,7 +48,8 @@ export default class Core {
   }
 
   // Fungsi untuk staking 1 WAL ke operator
-  async stakeOneWalToOperator() {
+  // Fungsi untuk staking 1 WAL ke operator
+async stakeOneWalToOperator() {
     try {
       const coins = await this.client.getCoins({
         owner: this.address,
@@ -62,6 +63,7 @@ export default class Core {
         throw new Error("Not enough WAL balance to stake");
       }
 
+      // Mengambil objek pool dan operator
       const poolObject = await this.client.getObject({
         id: this.walrusPoolObjectId,
         options: {
@@ -77,6 +79,11 @@ export default class Core {
           showContent: true,
         },
       });
+
+      // Memeriksa apakah atribut 'Shared' ada pada poolObject.data.owner
+      if (!poolObject.data.owner || !poolObject.data.owner.Shared) {
+        throw new Error("Shared attribute is missing from pool object");
+      }
 
       const transaction = new Transaction();
       const sharedPoolObject = transaction.sharedObjectRef({
@@ -108,7 +115,7 @@ export default class Core {
       logger.error("Error during staking: " + error.message);
       throw error;
     }
-  }
+}
 
   // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
