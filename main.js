@@ -3,9 +3,17 @@ import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
-import { MIST_PER_SUI } from "@mysten/sui/utils";
-import { COINENUM } from "./coin/coin_enum.js";
-import logger from "../utils/logger.js";
+
+// Definisi variabel dan konstanta yang diperlukan
+const MIST_PER_SUI = 1000000000; // 1 SUI = 1,000,000,000 MIST
+const COINENUM = {
+  SUI: "0x2::sui::SUI",
+  WAL: "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL",
+};
+const logger = {
+  info: console.log,
+  error: console.error,
+};
 
 export default class Core {
   constructor(privateKey) {
