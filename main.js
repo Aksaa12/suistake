@@ -1,66 +1,134 @@
-import axios from 'axios';
 import fs from 'fs';
+import { decodeSuiPrivateKey } from "@mysten/sui/cryptography";
+import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
+import { Transaction } from "@mysten/sui/transactions";
+import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
+import { MIST_PER_SUI } from "@mysten/sui/utils";
+import { COINENUM } from "./coin/coin_enum.js";
+import logger from "../utils/logger.js";
 
-// URL RPC SUI Testnet
-const SUI_RPC_URL = "https://rpc-testnet.suiscan.xyz/";
+export default class Core {
+  constructor(privateKey) {
+    this.acc = privateKey;
+    this.txCount = 0;
+    this.client = new SuiClient({ url: getFullnodeUrl("testnet") });
+    this.walrusAddress = "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef";
+    this.walrusPoolObjectId = "0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f31379f1b7c04244061d43914";
+    this.stakeNodeOperator = "0xcf4b9402e7f156bc75082bc07581b0829f081ccfc8c444c71df4536ea33d094a";
+  }
 
-// Object ID untuk sistem dan pool Walrus
-const SYSTEM_OBJECT = "0x50b84b68eb9da4c6d904a929f43638481c09c03be6274b8569778fe085c1590d";  // Sistem objek
-const STAKING_OBJECT = "0x37c0e4d7b36a2f64d51bba262a1791f844cfd88f31379f1b7c04244061d43914";  // Objek Pool Walrus
-const WAL_COIN_ADDRESS = "0x9f992cc2430a1f442ca7a5ca7638169f5d5c00e0ebc3977a65e9ac6e497fe5ef::wal::WAL";  // Alamat WAL
-
-// Stakeholder walrus
-const STAKENODEOPERATOR = "0xcf4b9402e7f156bc75082bc07581b0829f081ccfc8c444c71df4536ea33d094a";  // Alamat Node Walrus
-
-// Fungsi untuk memuat private key dari file
-function loadPrivateKey(filePath = "data.txt") {
-  return fs.readFileSync(filePath, "utf8").trim();
-}
-
-// Fungsi untuk melakukan staking
-async function stakeWalToWalrusPool() {
-  const privateKey = loadPrivateKey();  // Memuat private key dari file
-  
-  // Payload untuk transaksi staking
-  const payload = {
-    "jsonrpc": "2.0",
-    "method": "sui_moveCall",  // Metode untuk melakukan aksi di kontrak
-    "id": 1,
-    "params": [
-      null,  // ID akun (gunakan ID yang sesuai untuk akun wallet Anda)
-      {
-        "package_object_id": SYSTEM_OBJECT,  // ID objek sistem
-        "module": "staking",  // Nama modul untuk staking
-        "function": "stake",  // Fungsi yang dipanggil untuk staking
-        "type_arguments": [WAL_COIN_ADDRESS],  // Koin yang di-stake (WAL)
-        "arguments": [
-          STAKING_OBJECT,  // ID objek pool Walrus
-          "1"  // Jumlah WAL yang ingin di-stake (1 WAL)
-        ],
-        "gas_budget": 10000  // Budget gas untuk transaksi
-      },
-      privateKey  // Private key untuk transaksi
-    ]
-  };
-
-  try {
-    // Mengirimkan permintaan RPC untuk staking
-    const response = await axios.post(SUI_RPC_URL, payload, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    // Menangani respons
-    if (response.data.error) {
-      console.error("Terjadi kesalahan:", response.data.error);
-    } else {
-      console.log("Transaksi staking berhasil, ID transaksi:", response.data.result.tx_digest);
+  // Fungsi untuk membaca private key dari file
+  async readPrivateKey() {
+    try {
+      const privateKey = fs.readFileSync('data.txt', 'utf8').trim(); // Membaca file data.txt
+      return privateKey;
+    } catch (error) {
+      throw new Error('Failed to read private key from file: ' + error.message);
     }
-  } catch (error) {
-    console.error("Kesalahan saat mengirim transaksi:", error);
+  }
+
+  // Fungsi untuk mendapatkan informasi akun dan mempersiapkan transaksi
+  async getAccountInfo() {
+    try {
+      const decodedPrivateKey = decodeSuiPrivateKey(this.acc);
+      this.wallet = Ed25519Keypair.fromSecretKey(decodedPrivateKey.secretKey);
+      this.address = this.wallet.getPublicKey().toSuiAddress();
+      logger.info("Successfully retrieved account info: " + this.address);
+    } catch (error) {
+      throw new Error("Failed to get account info: " + error.message);
+    }
+  }
+
+  // Fungsi untuk staking 1 WAL ke operator
+  async stakeOneWalToOperator() {
+    try {
+      const coins = await this.client.getCoins({
+        owner: this.address,
+        coinType: COINENUM.WAL,
+      });
+
+      const coin = coins.data[0];
+      const balance = 1; // Hanya staking 1 unit WAL
+
+      if (coin.balance < balance) {
+        throw new Error("Not enough WAL balance to stake");
+      }
+
+      const poolObject = await this.client.getObject({
+        id: this.walrusPoolObjectId,
+        options: {
+          showBcs: true,
+          showContent: true,
+        },
+      });
+
+      const operatorObject = await this.client.getObject({
+        id: this.stakeNodeOperator,
+        options: {
+          showBcs: true,
+          showContent: true,
+        },
+      });
+
+      const transaction = new Transaction();
+      const sharedPoolObject = transaction.sharedObjectRef({
+        objectId: poolObject.data.objectId,
+        initialSharedVersion: poolObject.data.owner.Shared.initial_shared_version,
+        mutable: true,
+      });
+
+      // Menyiapkan coin untuk staking (Hanya 1 unit WAL)
+      const coinToStake = await transaction.splitCoins(
+        transaction.object(coin.coinObjectId),
+        [balance * MIST_PER_SUI] // Convert 1 WAL to MIST for staking
+      );
+
+      // Membuat transaksi staking
+      const stakedCoin = transaction.moveCall({
+        target: `${this.walrusAddress}::staking::stake_with_pool`,
+        arguments: [
+          sharedPoolObject,
+          transaction.object(coinToStake),
+          transaction.object(operatorObject.data.objectId),
+        ],
+      });
+
+      // Transfer objek yang telah di-stake
+      await transaction.transferObjects([stakedCoin], this.address);
+      await this.executeTx(transaction);
+    } catch (error) {
+      logger.error("Error during staking: " + error.message);
+      throw error;
+    }
+  }
+
+  // Fungsi untuk mengeksekusi transaksi
+  async executeTx(transaction) {
+    try {
+      logger.info("Executing transaction...");
+      const result = await this.client.signAndExecuteTransaction({
+        signer: this.wallet,
+        transaction: transaction,
+      });
+      logger.info("Transaction executed: " + result.digest);
+    } catch (error) {
+      throw new Error("Transaction execution failed: " + error.message);
+    }
+  }
+
+  // Fungsi utama untuk menjalankan staking
+  async runStaking() {
+    try {
+      const privateKey = await this.readPrivateKey(); // Membaca private key dari file
+      this.acc = privateKey; // Menetapkan private key ke akun
+      await this.getAccountInfo();
+      await this.stakeOneWalToOperator(); // Staking 1 WAL
+    } catch (error) {
+      logger.error("Error during staking process: " + error.message);
+    }
   }
 }
 
-// Menjalankan fungsi staking
-stakeWalToWalrusPool();
+// Menjalankan staking secara otomatis
+const core = new Core('');
+core.runStaking();
