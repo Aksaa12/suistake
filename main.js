@@ -129,7 +129,7 @@ export default class Core {
     }
   }
 
-  // Fungsi untuk mengeksekusi transaksi
+    // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
     try {
       logger.info("Executing transaction...");
@@ -137,11 +137,19 @@ export default class Core {
         signer: this.wallet,
         transaction: transaction,
       });
-      logger.info("Transaction executed: " + result.digest);
+
+      if (result && result.digest) {
+        logger.info("Transaction executed successfully: " + result.digest);
+      } else {
+        logger.error("Transaction executed, but no digest found in the response.");
+        throw new Error("Transaction result does not contain a digest.");
+      }
     } catch (error) {
+      logger.error("Transaction execution failed: " + error.message);
       throw new Error("Transaction execution failed: " + error.message);
     }
   }
+
 
   // Fungsi utama untuk menjalankan staking
   async runStaking() {
