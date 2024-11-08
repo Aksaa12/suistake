@@ -13,14 +13,13 @@ function stakeWalToWalrusPool() {
     const privateKey = loadPrivateKey();
     const payload = {
         "jsonrpc": "2.0",
-        "method": "sui_moveCall", // Pastikan metode yang benar untuk staking
+        "method": "submitTransaction",  // Menggunakan submitTransaction jika sesuai
         "id": 1,
         "params": [
-            null,
             {
-                "package_object_id": "0x2", // Cek apakah ini ID paket yang benar
-                "module": "staking", // Modul yang benar untuk staking
-                "function": "stake", // Fungsi yang benar untuk staking
+                "package_object_id": "0x2",  // Sesuaikan dengan ID yang benar
+                "module": "staking",  // Modul staking
+                "function": "stake",  // Fungsi stake
                 "type_arguments": [WAL_COIN_ADDRESS],
                 "arguments": [
                     WALRUS_POOL_OBJECT_ID,
