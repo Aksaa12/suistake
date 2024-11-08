@@ -48,99 +48,84 @@ export default class Core {
   }
 
   // Fungsi untuk staking
-  async stakeOneWalToOperator() {
-    try {
-      // Ambil koin WAL yang tersedia
-      const coins = await this.client.getCoins({
-        owner: this.address,
-        coinType: COINENUM.WAL,
-      });
+async stakeOneWalToOperator() {
+  try {
+    // Ambil koin WAL yang tersedia
+    const coins = await this.client.getCoins({
+      owner: this.address,
+      coinType: COINENUM.WAL,
+    });
 
-      if (!coins || coins.data.length === 0) {
-        throw new Error("No WAL coins found in the account");
-      }
-
-      const coin = coins.data[0];
-      console.log("Coin object:", coin);
-
-      // Pastikan koin memiliki saldo dan coinObjectId
-      if (!coin.balance || !coin.coinObjectId) {
-        throw new Error("Coin balance or coinObjectId is missing");
-      }
-
-      const coinBalance = BigInt(coin.balance);
-      const balanceToStake = BigInt(1 * MIST_PER_SUI); // Staking 1 WAL in Mist
-
-      console.log(`Coin balance (in Mist): ${coinBalance}`);
-      console.log(`Balance to stake (in Mist): ${balanceToStake}`);
-
-      // Mengecek saldo cukup untuk staking
-      if (coinBalance < balanceToStake) {
-        throw new Error("Not enough WAL balance to stake");
-      }
-
-      // Ambil objek pool dan operator
-      const poolObject = await this.client.getObject({
-        id: this.walrusPoolObjectId,
-        options: {
-          showBcs: true,
-          showContent: true,
-        },
-      });
-
-      const operatorObject = await this.client.getObject({
-        id: this.stakeNodeOperator,
-        options: {
-          showBcs: true,
-          showContent: true,
-        },
-      });
-
-      // Membuat transaksi staking
-      const transaction = new Transaction();
-
-      // Referensikan objek pool yang akan digunakan
-      const sharedPoolObject = transaction.sharedObjectRef({
-        objectId: poolObject.data.objectId,
-        mutable: true,
-      });
-
-      // Split coins dengan balance yang valid
-      const splitResult = await transaction.splitCoins(
-        transaction.object(coin.coinObjectId),
-        [balanceToStake] // Pastikan balance sudah dalam unit Mist
-      );
-
-      console.log("Split coins result:", splitResult);
-
-      // Tangani hasil split dengan benar
-      if (!splitResult || !splitResult.Result) {
-        throw new Error("Failed to split coins correctly");
-      }
-
-      const coinToStake = splitResult.Result;
-      console.log("Coin to stake:", coinToStake);
-
-      // Staking ke pool dengan operator
-      const stakedCoin = transaction.moveCall({
-        target: `${this.walrusAddress}::staking::stake_with_pool`,
-        arguments: [
-          sharedPoolObject,
-          transaction.object(coinToStake),
-          transaction.object(operatorObject.data.objectId),
-        ],
-      });
-
-      console.log("Staked coin:", stakedCoin);
-
-      // Transfer objek yang sudah di-stake
-      await transaction.transferObjects([stakedCoin], this.address);
-      await this.executeTx(transaction);
-    } catch (error) {
-      console.error("Error during staking: " + error.message);
-      throw error;
+    if (!coins || coins.data.length === 0) {
+      throw new Error("No WAL coins found in the account");
     }
+
+    const coin = coins.data[0];
+    console.log("Coin object:", coin);
+
+    // Pastikan koin memiliki saldo dan coinObjectId
+    if (!coin.balance || !coin.coinObjectId) {
+      throw new Error("Coin balance or coinObjectId is missing");
+    }
+
+    const coinBalance = BigInt(coin.balance);
+    const balanceToStake = BigInt(1 * MIST_PER_SUI); // Staking 1 WAL in Mist
+
+    console.log(`Coin balance (in Mist): ${coinBalance}`);
+    console.log(`Balance to stake (in Mist): ${balanceToStake}`);
+
+    // Mengecek saldo cukup untuk staking
+    if (coinBalance < balanceToStake) {
+      throw new Error("Not enough WAL balance to stake");
+    }
+
+    // Ambil objek pool dan operator
+    const poolObject = await this.client.getObject({
+      id: this.walrusPoolObjectId,
+      options: {
+        showBcs: true,
+        showContent: true,
+      },
+    });
+
+    const operatorObject = await this.client.getObject({
+      id: this.stakeNodeOperator,
+      options: {
+        showBcs: true,
+        showContent: true,
+      },
+    });
+
+    // Membuat transaksi staking
+    const transaction = new Transaction();
+
+    // Referensikan objek pool yang akan digunakan
+    const sharedPoolObject = transaction.sharedObjectRef({
+      objectId: poolObject.data.objectId,
+      mutable: true,
+    });
+
+    // Lakukan staking dengan koin WAL yang sudah ada
+    const stakedCoin = transaction.moveCall({
+      target: `${this.walrusAddress}::staking::stake_with_pool`,
+      arguments: [
+        sharedPoolObject,
+        transaction.object(coin.coinObjectId),
+        transaction.object(operatorObject.data.objectId),
+      ],
+    });
+
+    console.log("Staked coin:", stakedCoin);
+
+    // Transfer objek yang sudah di-stake
+    await transaction.transferObjects([stakedCoin], this.address);
+    await this.executeTx(transaction);
+  } catch (error) {
+    console.error("Error during staking: " + error.message);
+    throw error;
   }
+}
+
 
   // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
