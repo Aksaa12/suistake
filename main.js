@@ -108,10 +108,19 @@ async stakeOneWalToOperator() {
         });
 
         // Pastikan coin yang ingin di-stake valid dan dalam unit terkecil
-        const coinToStake = await transaction.splitCoins(
+        const splitResult = await transaction.splitCoins(
             transaction.object(coin.coinObjectId),
             [balanceToStake] // Ensure balance is converted to BigInt (Mist)
         );
+
+        console.log("Split coins result:", splitResult);
+
+        // Handle the split result correctly
+        if (!splitResult || !splitResult.Result) {
+            throw new Error("Failed to split coins correctly");
+        }
+
+        const coinToStake = splitResult.Result; // Extract the actual result
 
         console.log("Coin to stake:", coinToStake); // Log the result of splitCoins to debug
 
