@@ -58,8 +58,10 @@ export default class Core {
         const coin = coins.data[0];
         const balance = 1; // Hanya staking 1 WAL
 
+        console.log("Coin object:", coin); // Debugging log
+
         // Mengecek apakah saldo cukup
-        if (coin.balance < balance) {
+        if (!coin || !coin.balance || coin.balance < balance) {
             throw new Error("Not enough WAL balance to stake");
         }
 
@@ -90,9 +92,14 @@ export default class Core {
         });
 
         // Pastikan coin yang ingin di-stake valid dan dalam unit terkecil
+        const balanceInMist = BigInt(balance * MIST_PER_SUI); // Convert balance to Mist (smallest unit)
+        if (!coin.coinObjectId) {
+            throw new Error("Invalid coin object ID");
+        }
+
         const coinToStake = await transaction.splitCoins(
             transaction.object(coin.coinObjectId),
-            [BigInt(balance * MIST_PER_SUI)] // Convert ke MIST yang benar
+            [balanceInMist] // Ensure balance is correctly converted to BigInt
         );
 
         // Memanggil fungsi untuk staking ke pool dengan operator
@@ -112,7 +119,8 @@ export default class Core {
         console.error("Error during staking: " + error.message);
         throw error;
     }
-  }
+}
+
 
   // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
