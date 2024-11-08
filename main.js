@@ -47,9 +47,7 @@ export default class Core {
     }
   }
 
-import { MIST_PER_SUI } from "@mysten/sui/utils"; // Untuk konversi ke unit terkecil
-
-async stakeOneWalToOperator() {
+  async stakeOneWalToOperator() {
     try {
         // Ambil koin WAL yang tersedia
         const coins = await this.client.getCoins({
@@ -114,8 +112,7 @@ async stakeOneWalToOperator() {
         console.error("Error during staking: " + error.message);
         throw error;
     }
-}
-
+  }
 
   // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
