@@ -114,12 +114,84 @@ async stakeOneWalToOperator() {
       target: `${this.walrusAddress}::staking::stake_with_pool`,
       arguments: [
         sharedPoolObject,
+// Fungsi untuk staking
+async stakeOneWalToOperator() {
+  try {
+    // Ambil koin WAL yang tersedia
+    const coins = await this.client.getCoins({
+      owner: this.address,
+      coinType: COINENUM.WAL,
+    });
+
+    if (!coins || coins.data.length === 0) {
+      throw new Error("No WAL coins found in the account");
+    }
+
+    const coin = coins.data[0];
+    console.log("Coin object:", coin);
+
+    if (!coin.balance || !coin.coinObjectId) {
+      throw new Error("Coin balance or coinObjectId is missing");
+    }
+
+    const coinBalance = BigInt(coin.balance);
+    const balanceToStake = BigInt(1 * MIST_PER_SUI); // Staking 1 WAL in Mist
+
+    console.log(`Coin balance (in Mist): ${coinBalance}`);
+    console.log(`Balance to stake (in Mist): ${balanceToStake}`);
+
+    if (coinBalance < balanceToStake) {
+      throw new Error("Not enough WAL balance to stake");
+    }
+
+    // Ambil objek pool
+    const poolObject = await this.client.getObject({
+      id: this.walrusPoolObjectId,
+      options: {
+        showBcs: true,
+        showContent: true,
+      },
+    });
+
+    console.log("Pool object:", poolObject);
+
+    if (!poolObject || !poolObject.data || !poolObject.data.objectId) {
+      throw new Error("Pool objectId is missing or undefined.");
+    }
+
+    // Ambil objek operator
+    const operatorObject = await this.client.getObject({
+      id: this.stakeNodeOperator,
+      options: {
+        showBcs: true,
+        showContent: true,
+      },
+    });
+
+    console.log("Operator object:", operatorObject);
+
+    if (!operatorObject || !operatorObject.data || !operatorObject.data.objectId) {
+      throw new Error("Operator objectId is missing or undefined.");
+    }
+
+    // Membuat transaksi staking
+    const transaction = new Transaction();
+
+    const sharedPoolObject = transaction.sharedObjectRef({
+      objectId: poolObject.data.objectId,
+      mutable: true,
+    });
+
+    const stakedCoin = transaction.moveCall({
+      target: `${this.walrusAddress}::staking::stake_with_pool`,
+      arguments: [
+        sharedPoolObject,
         transaction.object(coin.coinObjectId),
         transaction.object(operatorObject.data.objectId),
       ],
     });
 
-    console.log("Staked coin:", stakedCoin);
+    console.log("Staked coin object prepared:", stakedCoin);
 
     await transaction.transferObjects([stakedCoin], this.address);
     await this.executeTx(transaction);
@@ -128,8 +200,6 @@ async stakeOneWalToOperator() {
     throw error;
   }
 }
-
-
 
   // Fungsi untuk mengeksekusi transaksi
   async executeTx(transaction) {
