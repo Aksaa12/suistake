@@ -47,69 +47,72 @@ export default class Core {
     }
   }
 
-// Fungsi untuk staking 1 WAL ke operator
+import { MIST_PER_SUI } from "@mysten/sui/utils"; // Untuk konversi ke unit terkecil
+
 async stakeOneWalToOperator() {
     try {
-      // Mengambil saldo coin WAL
-      const coins = await this.client.getCoins({
-        owner: this.address,
-        coinType: COINENUM.WAL,
-      });
+        // Ambil koin WAL yang tersedia
+        const coins = await this.client.getCoins({
+            owner: this.address,
+            coinType: COINENUM.WAL,
+        });
 
-      const coin = coins.data[0];
-      const balance = 1; // Hanya staking 1 unit WAL
+        const coin = coins.data[0];
+        const balance = 1; // Hanya staking 1 WAL
 
-      // Mengecek apakah saldo cukup
-      if (coin.balance < balance) {
-        throw new Error("Not enough WAL balance to stake");
-      }
+        // Mengecek apakah saldo cukup
+        if (coin.balance < balance) {
+            throw new Error("Not enough WAL balance to stake");
+        }
 
-      // Mengambil objek pool dan operator
-      const poolObject = await this.client.getObject({
-        id: this.walrusPoolObjectId,
-        options: {
-          showBcs: true,
-          showContent: true,
-        },
-      });
+        // Ambil objek pool dan operator
+        const poolObject = await this.client.getObject({
+            id: this.walrusPoolObjectId,
+            options: {
+                showBcs: true,
+                showContent: true,
+            },
+        });
 
-      const operatorObject = await this.client.getObject({
-        id: this.stakeNodeOperator,
-        options: {
-          showBcs: true,
-          showContent: true,
-        },
-      });
+        const operatorObject = await this.client.getObject({
+            id: this.stakeNodeOperator,
+            options: {
+                showBcs: true,
+                showContent: true,
+            },
+        });
 
-      // Membuat transaksi staking
-      const transaction = new Transaction();
-      const sharedPoolObject = transaction.sharedObjectRef({
-        objectId: poolObject.data.objectId,
-        mutable: true,
-      });
+        // Membuat transaksi staking
+        const transaction = new Transaction();
 
-      // Menyiapkan coin untuk staking (Hanya 1 unit WAL)
-      const coinToStake = await transaction.splitCoins(
-        transaction.object(coin.coinObjectId),
-        [balance * MIST_PER_SUI] // Convert 1 WAL to MIST for staking
-      );
+        // Referensikan objek pool yang akan digunakan
+        const sharedPoolObject = transaction.sharedObjectRef({
+            objectId: poolObject.data.objectId,
+            mutable: true,
+        });
 
-      // Membuat transaksi untuk staking ke pool
-      const stakedCoin = transaction.moveCall({
-        target: `${this.walrusAddress}::staking::stake_with_pool`,
-        arguments: [
-          sharedPoolObject,
-          transaction.object(coinToStake),
-          transaction.object(operatorObject.data.objectId),
-        ],
-      });
+        // Pastikan coin yang ingin di-stake valid dan dalam unit terkecil
+        const coinToStake = await transaction.splitCoins(
+            transaction.object(coin.coinObjectId),
+            [BigInt(balance * MIST_PER_SUI)] // Convert ke MIST yang benar
+        );
 
-      // Transfer objek yang telah di-stake
-      await transaction.transferObjects([stakedCoin], this.address);
-      await this.executeTx(transaction);
+        // Memanggil fungsi untuk staking ke pool dengan operator
+        const stakedCoin = transaction.moveCall({
+            target: `${this.walrusAddress}::staking::stake_with_pool`,
+            arguments: [
+                sharedPoolObject,
+                transaction.object(coinToStake),
+                transaction.object(operatorObject.data.objectId),
+            ],
+        });
+
+        // Transfer objek yang sudah di-stake
+        await transaction.transferObjects([stakedCoin], this.address);
+        await this.executeTx(transaction);
     } catch (error) {
-      console.error("Error during staking: " + error.message);
-      throw error;
+        console.error("Error during staking: " + error.message);
+        throw error;
     }
 }
 
