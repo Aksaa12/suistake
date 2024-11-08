@@ -55,13 +55,29 @@ async stakeOneWalToOperator() {
             coinType: COINENUM.WAL,
         });
 
-        const coin = coins.data[0];
-        const balance = 1; // Hanya staking 1 WAL
+        // Check if coin data is retrieved
+        if (!coins || coins.data.length === 0) {
+            throw new Error("No WAL coins found in the account");
+        }
 
-        console.log("Coin object:", coin); // Debugging log
+        const coin = coins.data[0];
+
+        console.log("Coin object:", coin); // Log the coin object to check its structure
+
+        // Verify that the coin object has balance and coinObjectId
+        if (!coin.balance || !coin.coinObjectId) {
+            throw new Error("Coin balance or coinObjectId is missing");
+        }
+
+        // Convert the balance to BigInt and ensure it's correct
+        const coinBalance = BigInt(coin.balance);
+        const balanceToStake = BigInt(1 * MIST_PER_SUI); // Hanya staking 1 WAL in smallest unit (Mist)
+
+        console.log(`Coin balance (in Mist): ${coinBalance}`);
+        console.log(`Balance to stake (in Mist): ${balanceToStake}`);
 
         // Mengecek apakah saldo cukup
-        if (!coin || !coin.balance || BigInt(coin.balance) < BigInt(balance * MIST_PER_SUI)) {
+        if (coinBalance < balanceToStake) {
             throw new Error("Not enough WAL balance to stake");
         }
 
@@ -92,15 +108,12 @@ async stakeOneWalToOperator() {
         });
 
         // Pastikan coin yang ingin di-stake valid dan dalam unit terkecil
-        const balanceInMist = BigInt(balance * MIST_PER_SUI); // Convert balance to Mist (smallest unit)
-        if (!coin.coinObjectId) {
-            throw new Error("Invalid coin object ID");
-        }
-
         const coinToStake = await transaction.splitCoins(
             transaction.object(coin.coinObjectId),
-            [balanceInMist] // Ensure balance is correctly converted to BigInt
+            [balanceToStake] // Ensure balance is converted to BigInt (Mist)
         );
+
+        console.log("Coin to stake:", coinToStake); // Log the result of splitCoins to debug
 
         // Memanggil fungsi untuk staking ke pool dengan operator
         const stakedCoin = transaction.moveCall({
@@ -111,6 +124,8 @@ async stakeOneWalToOperator() {
                 transaction.object(operatorObject.data.objectId),
             ],
         });
+
+        console.log("Staked coin:", stakedCoin); // Log the staked coin object
 
         // Transfer objek yang sudah di-stake
         await transaction.transferObjects([stakedCoin], this.address);
